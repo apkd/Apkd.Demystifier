@@ -12,13 +12,13 @@ namespace System.Diagnostics.Internal
         private int ptr;
 
 
-        public ILReader(byte[] cil) => _cil = cil;
+        internal ILReader(byte[] cil) => _cil = cil;
 
-        public OpCode OpCode { get; private set; }
-        public int MetadataToken { get; private set; }
-        public MemberInfo Operand { get; private set; }
+        internal OpCode OpCode { get; private set; }
+        internal int MetadataToken { get; private set; }
+        internal MemberInfo Operand { get; private set; }
 
-        public bool Read(MethodBase methodInfo)
+        internal bool Read(MethodBase methodInfo)
         {
             if (ptr < _cil.Length)
             {

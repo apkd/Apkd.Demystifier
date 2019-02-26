@@ -9,9 +9,9 @@ using System.Text;
 
 namespace System.Diagnostics
 {
-    public partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
+    internal partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
     {
-        public static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
+        internal static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
 
         private readonly List<EnhancedStackFrame> _frames;
 
@@ -26,7 +26,7 @@ namespace System.Diagnostics
         // Exceptions:
         //   T:System.ArgumentNullException:
         //     The parameter e is null.
-        public EnhancedStackTrace(Exception e)
+        internal EnhancedStackTrace(Exception e)
         {
             if (e == null)
             {
@@ -37,7 +37,7 @@ namespace System.Diagnostics
         }
 
 
-        public EnhancedStackTrace(StackTrace stackTrace)
+        internal EnhancedStackTrace(StackTrace stackTrace)
         {
             if (stackTrace == null)
             {
@@ -89,32 +89,42 @@ namespace System.Diagnostics
         {
             var frames = _frames;
             var count = frames.Count;
+            bool loggedFullFilepath = false;
 
             for (var i = 0; i < count; i++)
             {
                 if (i > 0)
-                {
-                    sb.Append(Environment.NewLine);
-                }
+                    sb.Append('\n');
 
                 var frame = frames[i];
 
-                sb.Append("   at ");
-                frame.MethodInfo.Append(sb);
-
-                var filePath = frame.GetFileName();
-                if (!string.IsNullOrEmpty(filePath))
+                if (frame.IsEmpty)
                 {
-                    sb.Append(" in ");
-                    sb.Append(TryGetFullPath(filePath));
-
+                    sb.Append(frame.StackFrame);
                 }
-
-                var lineNo = frame.GetFileLineNumber();
-                if (lineNo != 0)
+                else
                 {
-                    sb.Append(":line ");
-                    sb.Append(lineNo);
+                    frame.MethodInfo.Append(sb);
+
+                    var filePath = frame.GetFileName();
+                    if (!string.IsNullOrEmpty(filePath) && !frame.MethodInfo.Name.StartsWith("Log"))
+                    {
+                        if (!loggedFullFilepath)
+                        {
+                            filePath = frame.GetFullFilename();
+                            loggedFullFilepath = true;
+                        }
+                        sb.Append(" <size=8>(at ");
+                        sb.Append(filePath);
+
+                        var lineNo = frame.GetFileLineNumber();
+                        if (lineNo != 0)
+                        {
+                            sb.Append(':');
+                            sb.Append(lineNo);
+                            sb.Append(")</size>");
+                        }
+                    }
                 }
             }
         }
@@ -127,7 +137,7 @@ namespace System.Diagnostics
         /// Tries to convert a given <paramref name="filePath"/> to a full path.
         /// Returns original value if the conversion isn't possible or a given path is relative.
         /// </summary>
-        public static string TryGetFullPath(string filePath)
+        internal static string TryGetFullPath(string filePath)
         {
             if (Uri.TryCreate(filePath, UriKind.Absolute, out var uri) && uri.IsFile)
             {

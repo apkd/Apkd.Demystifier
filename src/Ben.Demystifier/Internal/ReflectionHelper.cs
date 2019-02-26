@@ -10,14 +10,14 @@ namespace System.Diagnostics.Internal
     /// <summary>
     /// A helper class that contains utilities methods for dealing with reflection.
     /// </summary>
-    public static class ReflectionHelper
+    internal static class ReflectionHelper
     {
         private static PropertyInfo tranformerNamesLazyPropertyInfo;
 
         /// <summary>
         /// Returns true if <paramref name="type"/> is <code>System.Runtime.CompilerServices.IsReadOnlyAttribute</code>.
         /// </summary>
-        public static bool IsReadOnlyAttribute(this Type type)
+        internal static bool IsReadOnlyAttribute(this Type type)
         {
             return type.Namespace == "System.Runtime.CompilerServices" && type.Name == "IsReadOnlyAttribute";
         }
@@ -25,7 +25,7 @@ namespace System.Diagnostics.Internal
         /// <summary>
         /// Returns true if the <paramref name="type"/> is a value tuple type.
         /// </summary>
-        public static bool IsValueTuple(this Type type)
+        internal static bool IsValueTuple(this Type type)
         {
             return type.Namespace == "System" && type.Name.Contains("ValueTuple`");
         }
@@ -37,7 +37,7 @@ namespace System.Diagnostics.Internal
         /// To avoid compile-time depencency hell with System.ValueTuple, this method uses reflection and not checks statically that 
         /// the given <paramref name="attribute"/> is <code>TupleElementNameAttribute</code>.
         /// </remarks>
-        public static bool IsTupleElementNameAttribue(this Attribute attribute)
+        internal static bool IsTupleElementNameAttribue(this Attribute attribute)
         {
             var attributeType = attribute.GetType();
             return attributeType.Namespace == "System.Runtime.CompilerServices" &&
@@ -51,7 +51,7 @@ namespace System.Diagnostics.Internal
         /// To avoid compile-time depencency hell with System.ValueTuple, this method uses reflection 
         /// instead of casting the attribute to a specific type.
         /// </remarks>
-        public static IList<string> GetTransformerNames(this Attribute attribute)
+        internal static IList<string> GetTransformerNames(this Attribute attribute)
         {
             Debug.Assert(attribute.IsTupleElementNameAttribue());
 

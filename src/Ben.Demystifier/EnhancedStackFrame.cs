@@ -5,15 +5,15 @@ using System.Reflection;
 
 namespace System.Diagnostics
 {
-    public class EnhancedStackFrame : StackFrame
+    internal class EnhancedStackFrame : StackFrame
     {
         private string _fileName;
         private int _lineNumber;
         private int _colNumber;
 
-        public StackFrame StackFrame { get; }
+        internal StackFrame StackFrame { get; }
 
-        public ResolvedMethod MethodInfo { get; }
+        internal ResolvedMethod MethodInfo { get; }
 
         internal EnhancedStackFrame(StackFrame stackFrame, ResolvedMethod methodInfo, string fileName, int lineNumber, int colNumber)
             : base(fileName, lineNumber, colNumber)
@@ -45,8 +45,28 @@ namespace System.Diagnostics
         ///     This information is typically extracted from the debugging symbols for the executable.
         /// </summary>
         /// <returns>The file name, or null if the file name cannot be determined.</returns>
-        public override string GetFileName() => _fileName;
+        public override string GetFileName()
+        {
+            if (string.IsNullOrWhiteSpace(_fileName))
+                return null;
+            if (_fileName.StartsWith(@"C:\buildslave\unity", StringComparison.InvariantCultureIgnoreCase))
+                return null;
 
+            return IO.Path.GetFileName(_fileName);
+            // return _fileName;
+        }
+
+        internal string GetFullFilename()
+        {
+            if (string.IsNullOrWhiteSpace(_fileName))
+                return null;
+            int index = _fileName.IndexOf("\\Assets\\");
+            if (index >= 0)
+                return _fileName.Substring(index + 1);
+            return _fileName;
+        }
+
+        internal bool IsEmpty => MethodInfo == null;
         /// <summary>
         ///    Gets the offset from the start of the Microsoft intermediate language (MSIL)
         ///    code for the method that is executing. This offset might be an approximation

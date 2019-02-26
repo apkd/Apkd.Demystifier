@@ -9,7 +9,7 @@ using System.Text;
 namespace System.Diagnostics
 {
     /// <nodoc />
-    public static class ExceptionExtentions
+    internal static class ExceptionExtensions
     {
         private static readonly FieldInfo stackTraceString = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -19,7 +19,7 @@ namespace System.Diagnostics
         /// <summary>
         /// Demystifies the given <paramref name="exception"/> and tracks the original stack traces for the whole exception tree.
         /// </summary>
-        public static T Demystify<T>(this T exception) where T : Exception
+        internal static T Demystify<T>(this T exception) where T : Exception
         {
             try
             {
@@ -58,7 +58,7 @@ namespace System.Diagnostics
         /// computes a demystified string representation and then restores the original state of the exception back.
         /// </remarks>
         [Contracts.Pure]
-        public static string ToStringDemystified(this Exception exception) 
+        internal static string ToStringDemystified(this Exception exception) 
             => new StringBuilder().AppendDemystified(exception).ToString();
     }
 }

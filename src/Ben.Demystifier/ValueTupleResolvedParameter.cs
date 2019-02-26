@@ -7,9 +7,9 @@ using System.Text;
 
 namespace System.Diagnostics 
 {
-    public class ValueTupleResolvedParameter : ResolvedParameter
+    internal class ValueTupleResolvedParameter : ResolvedParameter
     {
-        public IList<string> TupleNames { get; set; }
+        internal IList<string> TupleNames { get; set; }
 
         protected override void AppendTypeName(StringBuilder sb)
         {

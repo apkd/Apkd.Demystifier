@@ -3,12 +3,12 @@
 
 namespace System.Collections.Generic.Enumerable
 {
-    public struct EnumeratorIList<T> : IEnumerator<T>
+    internal struct EnumeratorIList<T> : IEnumerator<T>
     {
         private readonly IList<T> _list;
         private int _index;
 
-        public EnumeratorIList(IList<T> list)
+        internal EnumeratorIList(IList<T> list)
         {
             _index = -1;
             _list = list;

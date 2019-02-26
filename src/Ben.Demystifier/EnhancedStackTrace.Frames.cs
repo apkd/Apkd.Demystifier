@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace System.Diagnostics
 {
-    public partial class EnhancedStackTrace
+    internal partial class EnhancedStackTrace
     {
         private static readonly Type StackTraceHiddenAttibuteType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
 
@@ -44,42 +44,34 @@ namespace System.Diagnostics
                 return frames;
             }
 
-            using (var portablePdbReader = new PortablePdbReader())
+            for (var i = 0; i < stackFrames.Length; i++)
             {
+                var frame = stackFrames[i];
+                var method = frame.GetMethod();
 
-                for (var i = 0; i < stackFrames.Length; i++)
-                {
-                    var frame = stackFrames[i];
-                    var method = frame.GetMethod();
+                if (method == null)
+                    continue;
 
-                    // Always show last stackFrame
-                    if (!ShowInStackTrace(method) && i < stackFrames.Length - 1)
-                    {
+                if (CollapseStackFrames(method) && i < stackFrames.Length - 1)
+                    if (CollapseStackFrames(stackFrames[i + 1].GetMethod()))
                         continue;
-                    }
 
-                    var fileName = frame.GetFileName();
-                    var row = frame.GetFileLineNumber();
-                    var column = frame.GetFileColumnNumber();
-                    var ilOffset = frame.GetILOffset();
-                    if (string.IsNullOrEmpty(fileName) && ilOffset >= 0)
-                    {
-                        // .NET Framework and older versions of mono don't support portable PDBs
-                        // so we read it manually to get file name and line information
-                        portablePdbReader.PopulateStackFrame(frame, method, frame.GetILOffset(), out fileName, out row, out column);
-                    }
+                // Always show last stackFrame
+                if (!ShowInStackTrace(method) && i < stackFrames.Length - 1)
+                    continue;
 
-                    var stackFrame = new EnhancedStackFrame(frame, GetMethodDisplayString(method), fileName, row, column);
-
-
-                    frames.Add(stackFrame);
-                }
-
-                return frames;
+                var fileName = frame.GetFileName();
+                var row = frame.GetFileLineNumber();
+                var column = frame.GetFileColumnNumber();
+                var ilOffset = frame.GetILOffset();
+                var stackFrame = new EnhancedStackFrame(frame, GetMethodDisplayString(method), fileName, row, column);
+                frames.Add(stackFrame);
             }
+
+            return frames;
         }
 
-        public static ResolvedMethod GetMethodDisplayString(MethodBase originMethod)
+        internal static ResolvedMethod GetMethodDisplayString(MethodBase originMethod)
         {
             // Special case: no method available
             if (originMethod == null)
@@ -622,10 +614,22 @@ namespace System.Diagnostics
             return sb.ToString();
         }
 
+        private static bool CollapseStackFrames(MethodBase method)
+        {
+            var type = method.DeclaringType.FullName;
+            return type.StartsWith("UnityEditor.") ||
+                type.StartsWith("UnityEngine.") ||
+                type.StartsWith("System.") ||
+                type.StartsWith("UnityScript.Lang.") ||
+                type.StartsWith("Odin.Editor.") ||
+                type.StartsWith("Boo.Lang.");
+        }
+
         private static bool ShowInStackTrace(MethodBase method)
         {
             Debug.Assert(method != null);
             var type = method.DeclaringType;
+
             if (type == typeof(Task<>) && method.Name == "InnerInvoke")
             {
                 return false;
@@ -667,6 +671,8 @@ namespace System.Diagnostics
                 return true;
             }
 
+            string typeFullName = type.FullName;
+
             if (StackTraceHiddenAttibuteType != null)
             {
                 // Don't show any types marked with the StackTraceHiddenAttribute
@@ -697,11 +703,37 @@ namespace System.Diagnostics
                             return false;
                     }
                 }
-                else if (type.FullName == "System.ThrowHelper")
+                else if (typeFullName == "System.ThrowHelper")
                 {
                     return false;
                 }
             }
+
+            // collapse internal async frames
+
+            if (typeFullName.StartsWith("System.Runtime.CompilerServices.Async"))
+                return false;
+
+            // support for the Sirenix.OdinInspector package
+
+            if (typeFullName.StartsWith("Sirenix.OdinInspector"))
+                return false;
+
+            // support for the Apkd.AsyncManager package
+
+            if (typeFullName.StartsWith("Apkd.AsyncManager"))
+                return false;
+
+            // collapse internal unity logging methods
+
+            if (typeFullName == "UnityEngine.DebugLogHandler")
+                return false;
+
+            if (typeFullName == "UnityEngine.Logger")
+                return false;
+
+            if (typeFullName == "UnityEngine.Debug")
+                return false;
 
             return true;
         }

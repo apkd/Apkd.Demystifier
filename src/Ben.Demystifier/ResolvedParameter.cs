@@ -5,13 +5,13 @@ using System.Text;
 
 namespace System.Diagnostics
 {
-    public class ResolvedParameter
+    internal class ResolvedParameter
     {
-        public string Name { get; set; }
+        internal string Name { get; set; }
 
-        public Type ResolvedType { get; set; }
+        internal Type ResolvedType { get; set; }
 
-        public string Prefix { get; set; }
+        internal string Prefix { get; set; }
 
         public override string ToString() => Append(new StringBuilder()).ToString();
 

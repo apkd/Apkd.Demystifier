@@ -7,9 +7,9 @@ using System.Text;
 namespace System.Diagnostics
 {
     // Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
-    public static class TypeNameHelper
+    internal static class TypeNameHelper
     {
-        public static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
+        internal static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
         {
             { typeof(void), "void" },
             { typeof(bool), "bool" },
@@ -36,14 +36,14 @@ namespace System.Diagnostics
         /// <param name="fullName"><c>true</c> to print a fully qualified name.</param>
         /// <param name="includeGenericParameterNames"><c>true</c> to include generic parameter names.</param>
         /// <returns>The pretty printed type name.</returns>
-        public static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false)
+        internal static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false)
         {
             var builder = new StringBuilder();
             ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
             return builder.ToString();
         }
 
-        public static StringBuilder AppendTypeDisplayName(this StringBuilder builder, Type type, bool fullName = true, bool includeGenericParameterNames = false)
+        internal static StringBuilder AppendTypeDisplayName(this StringBuilder builder, Type type, bool fullName = true, bool includeGenericParameterNames = false)
         {
             ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
             return builder;
@@ -52,7 +52,7 @@ namespace System.Diagnostics
         /// <summary>
         /// Returns a name of given generic type without '`'.
         /// </summary>
-        public static string GetTypeNameForGenericType(Type type)
+        internal static string GetTypeNameForGenericType(Type type)
         {
             if (!type.IsGenericType)
             {
@@ -167,15 +167,15 @@ namespace System.Diagnostics
 
         private struct DisplayNameOptions
         {
-            public DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
+            internal DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
             {
                 FullName = fullName;
                 IncludeGenericParameterNames = includeGenericParameterNames;
             }
 
-            public bool FullName { get; }
+            internal bool FullName { get; }
 
-            public bool IncludeGenericParameterNames { get; }
+            internal bool IncludeGenericParameterNames { get; }
         }
     }
 }
