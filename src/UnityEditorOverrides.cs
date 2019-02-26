@@ -6,14 +6,21 @@ namespace Apkd.Internal
 {
     static class UnityEditorOverrides
     {
-        static readonly StringBuilder cachedBuilderLarge = new StringBuilder(capacity: 4096);
-        static readonly StringBuilder cachedBuilderSmall = new StringBuilder(capacity: 1024);
-        
+        static readonly System.Threading.ThreadLocal<StringBuilder> builderLarge
+            = new System.Threading.ThreadLocal<StringBuilder>(() => new StringBuilder(capacity: 4096));
+
+        static readonly System.Threading.ThreadLocal<StringBuilder> builderSmall
+            = new System.Threading.ThreadLocal<StringBuilder>(() => new StringBuilder(capacity: 1024));
+
+        static StringBuilder CachedBuilderLarge => builderLarge.Value;
+        static StringBuilder CachedBuilderSmall => builderSmall.Value;
+
+        // Method used to build the stack trace string (eg. when using UnityEngine.Debug.Log).
         internal static string ExtractFormattedStackTrace(StackTrace stackTrace)
         {
             try
             {
-                return new EnhancedStackTrace(stackTrace).ToString();
+                return new EnhancedStackTrace(stackTrace).ToString(CachedBuilderLarge);
             }
             catch
             {
@@ -21,15 +28,17 @@ namespace Apkd.Internal
             }
         }
 
+        // Unity uses this method to post-process the stack trace before displaying it in the editor.
+        // This doesn't affect the output in the log file.
         internal static string PostprocessStacktrace(string oldString, bool stripEngineInternalInformation)
         {
             if (oldString == null)
                 return String.Empty;
 
-            var output = cachedBuilderLarge.Clear();
+            var output = CachedBuilderLarge.Clear();
             output.Append('\n');
 
-            var temp = cachedBuilderSmall.Clear();
+            var temp = CachedBuilderSmall.Clear();
             for (int i = 0; i < oldString.Length; ++i)
             {
                 char c = oldString[i];
@@ -71,11 +80,12 @@ namespace Apkd.Internal
             }
         }
 
+        // Method used to extract the stack trace from an exception.
         internal static void ExtractStringFromExceptionInternal(System.Object topLevel, out string message, out string stackTrace)
         {
             try
             {
-                StringBuilder temp = cachedBuilderLarge.Clear();
+                StringBuilder temp = CachedBuilderLarge.Clear();
                 Exception current = topLevel as System.Exception;
                 message = current.Message != null ? current.GetType() + ": " + current.Message : current.GetType().ToString();
 
