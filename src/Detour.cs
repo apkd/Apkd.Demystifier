@@ -8,6 +8,8 @@ namespace Apkd.Internal
     [UnityEditor.InitializeOnLoad]
     static class Detour
     {
+        // This is based on an interesting technique from the RimWorld ComunityCoreLibrary project, originally credited to RawCode:
+        // https://github.com/RimWorldCCLTeam/CommunityCoreLibrary/blob/master/DLL_Project/Classes/Static/Detours.cs
         internal static unsafe void TryDetourFromTo(MethodInfo src, MethodInfo dst)
         {
             try
