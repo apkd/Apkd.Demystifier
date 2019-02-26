@@ -1,3 +1,7 @@
+using System;
+using System.Text;
+using System.Diagnostics;
+
 namespace Apkd.Internal
 {
     static class UnityEditorOverrides
@@ -5,7 +9,7 @@ namespace Apkd.Internal
         static readonly StringBuilder cachedBuilderLarge = new StringBuilder(capacity: 4096);
         static readonly StringBuilder cachedBuilderSmall = new StringBuilder(capacity: 1024);
         
-        static string ExtractFormattedStackTrace(StackTrace stackTrace)
+        internal static string ExtractFormattedStackTrace(StackTrace stackTrace)
         {
             try
             {
@@ -17,7 +21,7 @@ namespace Apkd.Internal
             }
         }
 
-        static string PostprocessStacktrace(string oldString, bool stripEngineInternalInformation)
+        internal static string PostprocessStacktrace(string oldString, bool stripEngineInternalInformation)
         {
             if (oldString == null)
                 return String.Empty;
@@ -67,7 +71,7 @@ namespace Apkd.Internal
             }
         }
 
-        static void ExtractStringFromExceptionInternal(System.Object topLevel, out string message, out string stackTrace)
+        internal static void ExtractStringFromExceptionInternal(System.Object topLevel, out string message, out string stackTrace)
         {
             try
             {

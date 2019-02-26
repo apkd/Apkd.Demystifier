@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Diagnostics;
 using static System.Reflection.BindingFlags;
 
@@ -72,18 +69,18 @@ namespace Apkd.Internal
         static Detour()
         {
             TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static)
+                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(UnityEditorOverrides.PostprocessStacktrace), NonPublic | Static),
+                dst: typeof(UnityEditorOverrides).GetMethod(nameof(UnityEditorOverrides.PostprocessStacktrace), NonPublic | Static)
             );
 
             TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(ExtractStringFromExceptionInternal), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(ExtractStringFromExceptionInternal), NonPublic | Static)
+                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(UnityEditorOverrides.ExtractStringFromExceptionInternal), NonPublic | Static),
+                dst: typeof(UnityEditorOverrides).GetMethod(nameof(UnityEditorOverrides.ExtractStringFromExceptionInternal), NonPublic | Static)
             );
 
             TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(ExtractFormattedStackTrace), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(ExtractFormattedStackTrace), NonPublic | Static)
+                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(UnityEditorOverrides.ExtractFormattedStackTrace), NonPublic | Static),
+                dst: typeof(UnityEditorOverrides).GetMethod(nameof(UnityEditorOverrides.ExtractFormattedStackTrace), NonPublic | Static)
             );
         }
     }
