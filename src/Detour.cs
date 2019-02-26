@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Diagnostics;
 using static System.Reflection.BindingFlags;
+using static Apkd.Internal.UnityEditorOverrides;
 
 namespace Apkd.Internal
 {
@@ -71,18 +72,18 @@ namespace Apkd.Internal
         static Detour()
         {
             TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(UnityEditorOverrides.PostprocessStacktrace), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(UnityEditorOverrides.PostprocessStacktrace), NonPublic | Static)
+                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static),
+                dst: typeof(UnityEditorOverrides).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static)
             );
 
             TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(UnityEditorOverrides.ExtractStringFromExceptionInternal), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(UnityEditorOverrides.ExtractStringFromExceptionInternal), NonPublic | Static)
+                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(ExtractStringFromExceptionInternal), NonPublic | Static),
+                dst: typeof(UnityEditorOverrides).GetMethod(nameof(ExtractStringFromExceptionInternal), NonPublic | Static)
             );
 
             TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(UnityEditorOverrides.ExtractFormattedStackTrace), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(UnityEditorOverrides.ExtractFormattedStackTrace), NonPublic | Static)
+                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(ExtractFormattedStackTrace), NonPublic | Static),
+                dst: typeof(UnityEditorOverrides).GetMethod(nameof(ExtractFormattedStackTrace), NonPublic | Static)
             );
         }
     }
