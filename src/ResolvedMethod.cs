@@ -5,7 +5,7 @@ using System.Collections.Generic.Enumerable;
 using System.Reflection;
 using System.Text;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     internal class ResolvedMethod
     {

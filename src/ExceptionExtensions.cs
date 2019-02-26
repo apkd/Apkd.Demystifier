@@ -6,7 +6,7 @@ using System.Collections.Generic.Enumerable;
 using System.Reflection;
 using System.Text;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     /// <nodoc />
     internal static class ExceptionExtensions

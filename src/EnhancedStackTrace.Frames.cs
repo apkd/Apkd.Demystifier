@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     internal partial class EnhancedStackTrace
     {

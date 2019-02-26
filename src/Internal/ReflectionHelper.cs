@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 
-namespace System.Diagnostics.Internal
+namespace Apkd.Internal.Internal
 {
     /// <summary>
     /// A helper class that contains utilities methods for dealing with reflection.

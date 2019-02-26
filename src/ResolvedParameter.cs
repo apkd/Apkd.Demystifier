@@ -3,7 +3,7 @@
 
 using System.Text;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     internal class ResolvedParameter
     {

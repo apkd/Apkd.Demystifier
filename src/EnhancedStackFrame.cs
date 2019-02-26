@@ -3,7 +3,7 @@
 
 using System.Reflection;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     internal class EnhancedStackFrame : StackFrame
     {

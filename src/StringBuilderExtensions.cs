@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     static class StringBuilderExtensions
     {
@@ -12,28 +12,19 @@ namespace System.Diagnostics
 
                 builder.Append(exception.GetType());
                 if (!string.IsNullOrEmpty(exception.Message))
-                {
                     builder.Append(": ").Append(exception.Message);
-                }
+
                 builder.Append(Environment.NewLine);
 
                 if (stackTrace.FrameCount > 0)
-                {
                     stackTrace.Append(builder);
-                }
 
                 if (exception is AggregateException aggEx)
-                {
                     foreach (var ex in Collections.Generic.Enumerable.EnumerableIList.Create(aggEx.InnerExceptions))
-                    {
                         builder.AppendInnerException(ex);
-                    }
-                }
 
                 if (exception.InnerException != null)
-                {
                     builder.AppendInnerException(exception.InnerException);
-                }
             }
             catch
             {
@@ -43,7 +34,7 @@ namespace System.Diagnostics
             return builder;
         }
 
-        private static void AppendInnerException(this StringBuilder builder, Exception exception) 
+        static void AppendInnerException(this StringBuilder builder, Exception exception) 
             => builder.Append(" ---> ")
                 .AppendDemystified(exception)
                 .AppendLine()

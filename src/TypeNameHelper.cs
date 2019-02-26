@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     // Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
     internal static class TypeNameHelper

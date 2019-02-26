@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Internal;
 using System.Text;
 
-namespace System.Diagnostics 
+namespace Apkd.Internal 
 {
     internal class ValueTupleResolvedParameter : ResolvedParameter
     {

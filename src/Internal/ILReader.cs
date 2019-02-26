@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace System.Diagnostics.Internal
+namespace Apkd.Internal.Internal
 {
     internal class ILReader
     {

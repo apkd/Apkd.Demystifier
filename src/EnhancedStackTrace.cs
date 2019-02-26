@@ -7,7 +7,7 @@ using System.Collections.Generic.Enumerable;
 using System.IO;
 using System.Text;
 
-namespace System.Diagnostics
+namespace Apkd.Internal
 {
     internal partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
     {
@@ -73,11 +73,11 @@ namespace System.Diagnostics
         /// Builds a readable representation of the stack trace.
         /// </summary>
         /// <returns>A readable representation of the stack trace.</returns>
-        public override string ToString()
+        public override string ToString() => ToString(new StringBuilder());
+
+        public string ToString(StringBuilder sb)
         {
             if (_frames == null || _frames.Count == 0) return "";
-
-            var sb = new StringBuilder();
 
             Append(sb);
 
