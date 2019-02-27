@@ -85,10 +85,16 @@ namespace Apkd.Internal
         {
             try
             {
-                StringBuilder temp = CachedBuilderLarge.Clear();
+                StringBuilder temp = CachedBuilderLarge;
                 Exception current = topLevel as System.Exception;
-                message = current.Message != null ? current.GetType() + ": " + current.Message : current.GetType().ToString();
 
+                temp.Clear();
+                if (current.Message != null)
+                    message = temp.Append(current.GetType().ToString()).Append(": ").Append(current.Message).ToString();
+                else
+                    message = current.GetType().ToString();
+
+                temp.Clear();
                 while (current != null)
                 {
                     if (current == topLevel)
