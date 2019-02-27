@@ -15,19 +15,18 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Reflection.BindingFlags;
 
 namespace Apkd.Internal
 {
     internal partial class EnhancedStackTrace
     {
-        private static readonly Type StackTraceHiddenAttibuteType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
+        static readonly Type StackTraceHiddenAttibuteType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
 
-        private static List<EnhancedStackFrame> GetFrames(Exception exception)
+        static List<EnhancedStackFrame> GetFrames(Exception exception)
         {
             if (exception == null)
-            {
                 return new List<EnhancedStackFrame>();
-            }
 
             var needFileInfo = true;
             var stackTrace = new StackTrace(exception, needFileInfo);
@@ -35,15 +34,13 @@ namespace Apkd.Internal
             return GetFrames(stackTrace);
         }
 
-        private static List<EnhancedStackFrame> GetFrames(StackTrace stackTrace)
+        static List<EnhancedStackFrame> GetFrames(StackTrace stackTrace)
         {
             var frames = new List<EnhancedStackFrame>();
             var stackFrames = stackTrace.GetFrames();
 
             if (stackFrames == null)
-            {
                 return frames;
-            }
 
             for (var i = 0; i < stackFrames.Length; i++)
             {
@@ -53,12 +50,12 @@ namespace Apkd.Internal
                 if (method == null)
                     continue;
 
-                if (CollapseStackFrames(method) && i < stackFrames.Length - 1)
-                    if (CollapseStackFrames(stackFrames[i + 1].GetMethod()))
+                if (ShouldCollapseStackFrames(method) && i < stackFrames.Length - 1)
+                    if (ShouldCollapseStackFrames(stackFrames[i + 1].GetMethod()))
                         continue;
 
                 // Always show last stackFrame
-                if (!ShowInStackTrace(method) && i < stackFrames.Length - 1)
+                if (!ShouldShowInStackTrace(method) && i < stackFrames.Length - 1)
                     continue;
 
                 var fileName = frame.GetFileName();
@@ -76,9 +73,7 @@ namespace Apkd.Internal
         {
             // Special case: no method available
             if (originMethod == null)
-            {
                 return null;
-            }
 
             var method = originMethod;
 
@@ -137,7 +132,7 @@ namespace Apkd.Internal
                         }
                         else
                         {
-                            var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                            var fields = type.GetFields(Static | Public | NonPublic);
                             foreach (var field in fields)
                             {
                                 var value = field.GetValue(field);
@@ -159,15 +154,11 @@ namespace Apkd.Internal
             }
 
             if (subMethodName != methodName)
-            {
                 methodDisplayInfo.SubMethod = subMethodName;
-            }
 
             // ResolveStateMachineMethod may have set declaringType to null
             if (type != null)
-            {
                 methodDisplayInfo.DeclaringType = type;
-            }
 
             if (method is MethodInfo mi)
             {
@@ -234,7 +225,7 @@ namespace Apkd.Internal
             return methodDisplayInfo;
         }
 
-        private static bool TryResolveGeneratedName(ref MethodBase method, out Type type, out string methodName, out string subMethodName, out GeneratedNameKind kind, out int? ordinal)
+        static bool TryResolveGeneratedName(ref MethodBase method, out Type type, out string methodName, out string subMethodName, out GeneratedNameKind kind, out int? ordinal)
         {
             kind = GeneratedNameKind.None;
             type = method.DeclaringType;
@@ -245,9 +236,7 @@ namespace Apkd.Internal
             var generatedName = methodName;
 
             if (!TryParseGeneratedName(generatedName, out kind, out var openBracketOffset, out var closeBracketOffset))
-            {
                 return false;
-            }
 
             methodName = generatedName.Substring(openBracketOffset + 1, closeBracketOffset - openBracketOffset - 1);
 
@@ -276,38 +265,38 @@ namespace Apkd.Internal
 
             var dt = method.DeclaringType;
             if (dt == null)
-            {
                 return false;
-            }
 
             var matchHint = GetMatchHint(kind, method);
 
             var matchName = methodName;
 
-            var candidateMethods = dt.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-            if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal)) return true;
+            var candidateMethods = dt.GetMethods(Public | NonPublic | Static | Instance | DeclaredOnly).Where(m => m.Name == matchName);
+            if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal))
+                return true;
 
-            var candidateConstructors = dt.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-            if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal)) return true;
+            var candidateConstructors = dt.GetConstructors(Public | NonPublic | Static | Instance | DeclaredOnly).Where(m => m.Name == matchName);
+            if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal))
+                return true;
 
             const int MaxResolveDepth = 10;
             for (var i = 0; i < MaxResolveDepth; i++)
             {
                 dt = dt.DeclaringType;
                 if (dt == null)
-                {
                     return false;
-                }
 
-                candidateMethods = dt.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-                if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal)) return true;
+                candidateMethods = dt.GetMethods(Public | NonPublic | Static | Instance | DeclaredOnly).Where(m => m.Name == matchName);
+                if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal))
+                    return true;
 
-                candidateConstructors = dt.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-                if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal)) return true;
+                candidateConstructors = dt.GetConstructors(Public | NonPublic | Static | Instance | DeclaredOnly).Where(m => m.Name == matchName);
+                if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal))
+                    return true;
 
                 if (methodName == ".cctor")
                 {
-                    candidateConstructors = dt.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
+                    candidateConstructors = dt.GetConstructors(Public | NonPublic | Static | DeclaredOnly).Where(m => m.Name == matchName);
                     foreach (var cctor in candidateConstructors)
                     {
                         method = cctor;
@@ -320,7 +309,7 @@ namespace Apkd.Internal
             return false;
         }
 
-        private static bool TryResolveSourceMethod(IEnumerable<MethodBase> candidateMethods, GeneratedNameKind kind, string matchHint, ref MethodBase method, ref Type type, out int? ordinal)
+        static bool TryResolveSourceMethod(IEnumerable<MethodBase> candidateMethods, GeneratedNameKind kind, string matchHint, ref MethodBase method, ref Type type, out int? ordinal)
         {
             ordinal = null;
             foreach (var candidateMethod in candidateMethods)
@@ -331,10 +320,8 @@ namespace Apkd.Internal
                     foreach (var v in EnumerableIList.Create(methodBody?.LocalVariables))
                     {
                         if (v.LocalType == type)
-                        {
                             GetOrdinal(method, ref ordinal);
 
-                        }
                         method = candidateMethod;
                         type = method.DeclaringType;
                         return true;
@@ -344,7 +331,8 @@ namespace Apkd.Internal
                 try
                 {
                     var rawIL = methodBody?.GetILAsByteArray();
-                    if (rawIL == null) continue;
+                    if (rawIL == null)
+                        continue;
                     var reader = new ILReader(rawIL);
                     while (reader.Read(candidateMethod))
                     {
@@ -353,9 +341,7 @@ namespace Apkd.Internal
                             if (method == mb || (matchHint != null && method.Name.Contains(matchHint)))
                             {
                                 if (kind == GeneratedNameKind.LambdaMethod)
-                                {
                                     GetOrdinal(method, ref ordinal);
-                                }
 
                                 method = candidateMethod;
                                 type = method.DeclaringType;
@@ -374,7 +360,7 @@ namespace Apkd.Internal
             return false;
         }
 
-        private static void GetOrdinal(MethodBase method, ref int? ordinal)
+        static void GetOrdinal(MethodBase method, ref int? ordinal)
         {
             var lamdaStart = method.Name.IndexOf((char)GeneratedNameKind.LambdaMethod + "__") + 3;
             if (lamdaStart > 3)
@@ -393,8 +379,7 @@ namespace Apkd.Internal
 
                 ordinal = foundOrdinal;
 
-                var methods = method.DeclaringType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
+                var methods = method.DeclaringType.GetMethods(Public | NonPublic | Static | Instance | DeclaredOnly);
                 var startName = method.Name.Substring(0, lamdaStart);
                 var count = 0;
                 foreach (var m in methods)
@@ -404,17 +389,12 @@ namespace Apkd.Internal
                         count++;
 
                         if (count > 1)
-                        {
                             break;
-                        }
                     }
                 }
 
-
                 if (count <= 1)
-                {
                     ordinal = null;
-                }
             }
         }
 
@@ -426,9 +406,11 @@ namespace Apkd.Internal
             {
                 case GeneratedNameKind.LocalFunction:
                     var start = methodName.IndexOf("|");
-                    if (start < 1) return null;
+                    if (start < 1)
+                        return null;
                     var end = methodName.IndexOf("_", start) + 1;
-                    if (end <= start) return null;
+                    if (end <= start)
+                        return null;
 
                     return methodName.Substring(start, end - start);
             }
@@ -447,14 +429,11 @@ namespace Apkd.Internal
             out int closeBracketOffset)
         {
             openBracketOffset = -1;
+
             if (name.StartsWith("CS$<", StringComparison.Ordinal))
-            {
                 openBracketOffset = 3;
-            }
             else if (name.StartsWith("<", StringComparison.Ordinal))
-            {
                 openBracketOffset = 0;
-            }
 
             if (openBracketOffset >= 0)
             {
@@ -477,7 +456,7 @@ namespace Apkd.Internal
         }
 
 
-        private static int IndexOfBalancedParenthesis(string str, int openingOffset, char closing)
+        static int IndexOfBalancedParenthesis(string str, int openingOffset, char closing)
         {
             var opening = str[openingOffset];
 
@@ -492,36 +471,27 @@ namespace Apkd.Internal
                 else if (c == closing)
                 {
                     depth--;
+
                     if (depth == 0)
-                    {
                         return i;
-                    }
                 }
             }
 
             return -1;
         }
 
-        private static string GetPrefix(ParameterInfo parameter, Type parameterType)
+        static string GetPrefix(ParameterInfo parameter, Type parameterType)
         {
             if (parameter.IsOut)
-            {
                 return "out";
-            }
 
             if (parameterType != null && parameterType.IsByRef)
             {
                 var attribs = parameter.GetCustomAttributes(inherit: false);
                 if (attribs?.Length > 0)
-                {
                     foreach (var attrib in attribs)
-                    {
                         if (attrib is Attribute att && att.GetType().IsReadOnlyAttribute())
-                        {
                             return "in";
-                        }
-                    }
-                }
 
                 return "ref";
             }
@@ -529,7 +499,7 @@ namespace Apkd.Internal
             return string.Empty;
         }
 
-        private static ResolvedParameter GetParameter(ParameterInfo parameter)
+        static ResolvedParameter GetParameter(ParameterInfo parameter)
         {
             var parameterType = parameter.ParameterType;
             var prefix = GetPrefix(parameter, parameterType);
@@ -559,9 +529,7 @@ namespace Apkd.Internal
             }
 
             if (parameterType.IsByRef)
-            {
                 parameterType = parameterType.GetElementType();
-            }
 
             return new ResolvedParameter
             {
@@ -571,7 +539,7 @@ namespace Apkd.Internal
             };
         }
 
-        private static ResolvedParameter GetValueTupleParameter(IList<string> tupleNames, string prefix, string name, Type parameterType)
+        static ResolvedParameter GetValueTupleParameter(IList<string> tupleNames, string prefix, string name, Type parameterType)
         {
             return new ValueTupleResolvedParameter
             {
@@ -582,7 +550,7 @@ namespace Apkd.Internal
             };
         }
 
-        private static string GetValueTupleParameterName(IList<string> tupleNames, Type parameterType)
+        static string GetValueTupleParameterName(IList<string> tupleNames, Type parameterType)
         {
             var sb = new StringBuilder();
             sb.Append("(");
@@ -590,22 +558,16 @@ namespace Apkd.Internal
             for (var i = 0; i < args.Length; i++)
             {
                 if (i > 0)
-                {
                     sb.Append(", ");
-                }
 
                 sb.Append(TypeNameHelper.GetTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true));
 
                 if (i >= tupleNames.Count)
-                {
                     continue;
-                }
 
                 var argName = tupleNames[i];
                 if (argName == null)
-                {
                     continue;
-                }
 
                 sb.Append(" ");
                 sb.Append(argName);
@@ -615,7 +577,7 @@ namespace Apkd.Internal
             return sb.ToString();
         }
 
-        private static bool CollapseStackFrames(MethodBase method)
+        static bool ShouldCollapseStackFrames(MethodBase method)
         {
             var type = method.DeclaringType.FullName;
             return type.StartsWith("UnityEditor.") ||
@@ -626,15 +588,14 @@ namespace Apkd.Internal
                 type.StartsWith("Boo.Lang.");
         }
 
-        private static bool ShowInStackTrace(MethodBase method)
+        static bool ShouldShowInStackTrace(MethodBase method)
         {
             Debug.Assert(method != null);
             var type = method.DeclaringType;
 
             if (type == typeof(Task<>) && method.Name == "InnerInvoke")
-            {
                 return false;
-            }
+
             if (type == typeof(Task))
             {
                 switch (method.Name)
@@ -647,6 +608,7 @@ namespace Apkd.Internal
                         return false;
                 }
             }
+
             if (type == typeof(ExecutionContext))
             {
                 switch (method.Name)
@@ -662,15 +624,11 @@ namespace Apkd.Internal
                 // Don't show any methods marked with the StackTraceHiddenAttribute
                 // https://github.com/dotnet/coreclr/pull/14652
                 if (IsStackTraceHidden(method))
-                {
                     return false;
-                }
             }
 
             if (type == null)
-            {
                 return true;
-            }
 
             string typeFullName = type.FullName;
 
@@ -679,9 +637,7 @@ namespace Apkd.Internal
                 // Don't show any types marked with the StackTraceHiddenAttribute
                 // https://github.com/dotnet/coreclr/pull/14652
                 if (IsStackTraceHidden(type))
-                {
                     return false;
-                }
             }
             else
             {
@@ -711,24 +667,20 @@ namespace Apkd.Internal
             }
 
             // collapse internal async frames
-
             if (typeFullName.StartsWith("System.Runtime.CompilerServices.Async"))
                 return false;
 
 #if ODIN_INSPECTOR
             // support for the Sirenix.OdinInspector package
-
             if (typeFullName.StartsWith("Sirenix.OdinInspector"))
                 return false;
 #endif
 
             // support for the Apkd.AsyncManager package
-
             if (typeFullName.StartsWith("Apkd.AsyncManager"))
                 return false;
 
             // collapse internal unity logging methods
-
             if (typeFullName == "UnityEngine.DebugLogHandler")
                 return false;
 
@@ -741,12 +693,10 @@ namespace Apkd.Internal
             return true;
         }
 
-        private static bool IsStackTraceHidden(MemberInfo memberInfo)
+        static bool IsStackTraceHidden(MemberInfo memberInfo)
         {
             if (!memberInfo.Module.Assembly.ReflectionOnly)
-            {
                 return memberInfo.GetCustomAttributes(StackTraceHiddenAttibuteType, false).Length != 0;
-            }
 
             EnumerableIList<CustomAttributeData> attributes;
             try
@@ -758,19 +708,15 @@ namespace Apkd.Internal
                 return false;
             }
 
+            // reflection-only attribute, match on name
             foreach (var attribute in attributes)
-            {
-                // reflection-only attribute, match on name
                 if (attribute.AttributeType.FullName == StackTraceHiddenAttibuteType.FullName)
-                {
                     return true;
-                }
-            }
 
             return false;
         }
 
-        private static bool TryResolveStateMachineMethod(ref MethodBase method, out Type declaringType)
+        static bool TryResolveStateMachineMethod(ref MethodBase method, out Type declaringType)
         {
             Debug.Assert(method != null);
             Debug.Assert(method.DeclaringType != null);
@@ -779,23 +725,17 @@ namespace Apkd.Internal
 
             var parentType = declaringType.DeclaringType;
             if (parentType == null)
-            {
                 return false;
-            }
 
-            var methods = parentType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            var methods = parentType.GetMethods(Public | NonPublic | Static | Instance | DeclaredOnly);
             if (methods == null)
-            {
                 return false;
-            }
 
             foreach (var candidateMethod in methods)
             {
                 var attributes = candidateMethod.GetCustomAttributes<StateMachineAttribute>();
                 if (attributes == null)
-                {
                     continue;
-                }
 
                 foreach (var asma in attributes)
                 {
