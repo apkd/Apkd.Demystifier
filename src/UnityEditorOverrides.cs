@@ -91,7 +91,8 @@ namespace Apkd.Internal
                     int boldStart = 0;
                     for (int i = boldEnd; i >= 0; --i)
                     {
-                        if (line[i] == '.')
+                        char c = line[i];
+                        if (c == '.' || c == '+')
                         {
                             boldStart = i;
                             break;
