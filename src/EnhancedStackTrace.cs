@@ -116,7 +116,11 @@ namespace Apkd.Internal
                             filePath = frame.GetFullFilename();
                             loggedFullFilepath = true;
                         }
-                        sb.Append(" <size=8>(at ");
+#if !APKD_STACKTRACE_NOFORMAT
+                        sb.Append(" →(at ");
+#else
+                        sb.Append(" (at ");
+#endif
                         sb.Append(filePath);
 
                         var lineNo = frame.GetFileLineNumber();
@@ -124,7 +128,7 @@ namespace Apkd.Internal
                         {
                             sb.Append(':');
                             sb.Append(lineNo);
-                            sb.Append(")</size>");
+                            sb.Append(')');
                         }
                     }
                 }

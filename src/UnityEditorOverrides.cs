@@ -45,6 +45,7 @@ namespace Apkd.Internal
                 char c = oldString[i];
                 temp.Append(c);
 
+                // check if we've collected a line into temp
                 if (c == '\n' || i == oldString.Length - 1)
                 {
                     (bool skip, bool exit) = PostProcessLine(temp, stripEngineInternalInformation);
@@ -54,7 +55,7 @@ namespace Apkd.Internal
 
                     if (!skip)
                         for (int j = 0; j < temp.Length; ++j)
-                            output.Append(temp[j]);
+                            output.Append(temp[j]); // copy line to output
 
                     temp.Clear();
                 }
@@ -64,18 +65,48 @@ namespace Apkd.Internal
 
             (bool skip, bool exit) PostProcessLine(StringBuilder line, bool ignoreInternal)
             {
-                // Ignore empty lines
+                // ignore empty lines
                 if (line.Length == 0 || line.Length == 1 && line[0] == '\n')
                     return (skip: true, exit: false);
 
-                // Make GameView GUI stack traces skip editor GUI part
+                // mke GameView GUI stack traces skip editor GUI part
                 if (ignoreInternal && line.StartsWith("UnityEditor.EditorGUIUtility:RenderGameViewCameras"))
                     return (skip: false, exit: true);
 
                 line.Insert(0, "│ ");
 
-                // Unify path names to unix style
+                // unify path names to unix style
                 line.Replace('\\', '/');
+
+#if !APKD_STACKTRACE_NOFORMAT
+                // emphasized method return type
+                {
+                    line.Replace("‹", "<i>");
+                    line.Replace("›", "</i>");
+                }
+                // emphasized method name
+                int boldEnd = line.IndexOf('‼');
+                if (boldEnd >= 0)
+                {
+                    int boldStart = 0;
+                    for (int i = boldEnd; i >= 0; --i)
+                    {
+                        if (line[i] == '.')
+                        {
+                            boldStart = i;
+                            break;
+                        }
+                    }
+                    line.Replace("‼", "</i></b>");
+                    line.Insert(boldStart + 1, "<b><i>");
+                }
+                // smaller filename and line number
+                if (line.IndexOf('→') >= 0)
+                {
+                    line.Replace("→", "<size=8>");
+                    line.Insert(line.Length - 1, "</size>");
+                }
+#endif
 
                 return (skip: false, exit: false);
             }

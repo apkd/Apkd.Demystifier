@@ -17,6 +17,9 @@ namespace Apkd.Internal
 
         internal StringBuilder Append(StringBuilder sb)
         {
+#if !APKD_STACKTRACE_NOFORMAT
+            sb.Append('‹');
+#endif
             if (!string.IsNullOrEmpty(Prefix))
             {
                 sb.Append(Prefix)
@@ -32,6 +35,9 @@ namespace Apkd.Internal
                 sb.Append("?");
             }
 
+#if !APKD_STACKTRACE_NOFORMAT
+            sb.Append('›');
+#endif
             if (!string.IsNullOrEmpty(Name))
             {
                 sb.Append(" ")
