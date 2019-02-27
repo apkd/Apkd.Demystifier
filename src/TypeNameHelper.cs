@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -60,7 +61,7 @@ namespace Apkd.Internal
             }
 
             var genericPartIndex = type.Name.IndexOf('`');
-            Debug.Assert(genericPartIndex >= 0);
+            System.Diagnostics.Debug.Assert(genericPartIndex >= 0);
 
             return type.Name.Substring(0, genericPartIndex);
         }

@@ -1,11 +1,12 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 
-namespace Apkd.Internal.Internal
+namespace Apkd.Internal
 {
     /// <summary>
     /// A helper class that contains utilities methods for dealing with reflection.
@@ -53,7 +54,7 @@ namespace Apkd.Internal.Internal
         /// </remarks>
         internal static IList<string> GetTransformerNames(this Attribute attribute)
         {
-            Debug.Assert(attribute.IsTupleElementNameAttribue());
+            System.Diagnostics.Debug.Assert(attribute.IsTupleElementNameAttribue());
 
             var propertyInfo = GetTransformNamesPropertyInfo(attribute.GetType());
             return (IList<string>)propertyInfo.GetValue(attribute);

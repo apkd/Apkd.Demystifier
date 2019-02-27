@@ -1,7 +1,8 @@
+using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Apkd.Internal.Internal
+namespace Apkd.Internal
 {
     internal class ILReader
     {
@@ -10,7 +11,6 @@ namespace Apkd.Internal.Internal
 
         private readonly byte[] _cil;
         private int ptr;
-
 
         internal ILReader(byte[] cil) => _cil = cil;
 

@@ -20,7 +20,8 @@ namespace Apkd.Internal
         {
             try
             {
-                return new EnhancedStackTrace(stackTrace).ToString(CachedBuilderLarge);
+                var temp = CachedBuilderLarge.Clear();
+                return new EnhancedStackTrace(stackTrace).ToString(temp);
             }
             catch
             {

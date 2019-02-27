@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 namespace Apkd.Internal
@@ -20,7 +21,7 @@ namespace Apkd.Internal
                     stackTrace.Append(builder);
 
                 if (exception is AggregateException aggEx)
-                    foreach (var ex in Collections.Generic.Enumerable.EnumerableIList.Create(aggEx.InnerExceptions))
+                    foreach (var ex in System.Collections.Generic.Enumerable.EnumerableIList.Create(aggEx.InnerExceptions))
                         builder.AppendInnerException(ex);
 
                 if (exception.InnerException != null)

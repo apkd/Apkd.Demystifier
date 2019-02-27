@@ -9,7 +9,7 @@ namespace Apkd.Internal
     {
         internal string Name { get; set; }
 
-        internal Type ResolvedType { get; set; }
+        internal System.Type ResolvedType { get; set; }
 
         internal string Prefix { get; set; }
 

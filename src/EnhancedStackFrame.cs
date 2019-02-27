@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Apkd.Internal
@@ -49,10 +50,10 @@ namespace Apkd.Internal
         {
             if (string.IsNullOrWhiteSpace(_fileName))
                 return null;
-            if (_fileName.StartsWith(@"C:\buildslave\unity", StringComparison.InvariantCultureIgnoreCase))
+            if (_fileName.StartsWith(@"C:\buildslave\unity", System.StringComparison.InvariantCultureIgnoreCase))
                 return null;
 
-            return IO.Path.GetFileName(_fileName);
+            return System.IO.Path.GetFileName(_fileName);
             // return _fileName;
         }
 

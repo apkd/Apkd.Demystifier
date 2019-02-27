@@ -1,8 +1,10 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Generic.Enumerable;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
@@ -57,7 +59,7 @@ namespace Apkd.Internal
         /// Unlike <see cref="Demystify{T}"/> this method is pure. It calls <see cref="Demystify{T}"/> first,
         /// computes a demystified string representation and then restores the original state of the exception back.
         /// </remarks>
-        [Contracts.Pure]
+        [System.Diagnostics.Contracts.Pure]
         internal static string ToStringDemystified(this Exception exception) 
             => new StringBuilder().AppendDemystified(exception).ToString();
     }

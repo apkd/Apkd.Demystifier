@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Diagnostics.Internal;
+using System.Diagnostics;
 using System.Text;
 
 namespace Apkd.Internal 
@@ -28,7 +28,7 @@ namespace Apkd.Internal
         }
 
 
-        private void AppendValueTupleParameterName(StringBuilder sb, Type parameterType)
+        private void AppendValueTupleParameterName(StringBuilder sb, System.Type parameterType)
         {
             sb.Append("(");
             var args = parameterType.GetGenericArguments();
