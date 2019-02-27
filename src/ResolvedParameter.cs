@@ -12,37 +12,29 @@ namespace Apkd.Internal
         internal System.Type ResolvedType { get; set; }
 
         internal string Prefix { get; set; }
+        internal string Prefix2 { get; set; }
 
         public override string ToString() => Append(new StringBuilder()).ToString();
 
         internal StringBuilder Append(StringBuilder sb)
         {
-#if !APKD_STACKTRACE_NOFORMAT
-            sb.Append('‹');
-#endif
+            sb.AppendFormattingChar('‹');
+
+            if (!string.IsNullOrEmpty(Prefix2))
+                sb.Append(Prefix2).Append(' ');
+
             if (!string.IsNullOrEmpty(Prefix))
-            {
-                sb.Append(Prefix)
-                  .Append(" ");
-            }
+                sb.Append(Prefix).Append(' ');
 
             if (ResolvedType != null)
-            {
                 AppendTypeName(sb);
-            }
             else
-            {
-                sb.Append("?");
-            }
+                sb.Append('?');
 
-#if !APKD_STACKTRACE_NOFORMAT
-            sb.Append('›');
-#endif
+            sb.AppendFormattingChar('›');
+
             if (!string.IsNullOrEmpty(Name))
-            {
-                sb.Append(" ")
-                  .Append(Name);
-            }
+                sb.Append(' ').Append(Name);
 
             return sb;
         }

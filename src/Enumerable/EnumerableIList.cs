@@ -29,7 +29,7 @@ namespace System.Collections.Generic.Enumerable
         public T this[int index] { get => _list[index]; set => _list[index] = value; }
 
         /// <inheritdoc />
-        public int Count => _list.Count;
+        public int Count => _list?.Count ?? 0;
 
         /// <inheritdoc />
         public bool IsReadOnly => _list.IsReadOnly;

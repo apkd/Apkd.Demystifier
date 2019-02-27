@@ -35,6 +35,13 @@ namespace Apkd.Internal
             return builder;
         }
 
+        internal static StringBuilder AppendFormattingChar(this StringBuilder builder, char c)
+        #if !APKD_STACKTRACE_NOFORMAT
+            => builder.Append(c);
+        #else
+            => builder;
+        #endif
+
         static void AppendInnerException(this StringBuilder builder, Exception exception) 
             => builder.Append(" ---> ")
                 .AppendDemystified(exception)

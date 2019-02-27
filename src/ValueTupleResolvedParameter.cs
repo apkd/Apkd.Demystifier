@@ -21,42 +21,36 @@ namespace Apkd.Internal
             {
                 // Need to unwrap the first generic argument first.
                 sb.Append(TypeNameHelper.GetTypeNameForGenericType(ResolvedType));
-                sb.Append("<");
+                sb.Append('<');
                 AppendValueTupleParameterName(sb, ResolvedType.GetGenericArguments()[0]);
-                sb.Append(">");
+                sb.Append('>');
             }
         }
 
 
-        private void AppendValueTupleParameterName(StringBuilder sb, System.Type parameterType)
+        void AppendValueTupleParameterName(StringBuilder sb, System.Type parameterType)
         {
-            sb.Append("(");
+            sb.Append('(');
             var args = parameterType.GetGenericArguments();
             for (var i = 0; i < args.Length; i++)
             {
                 if (i > 0)
-                {
-                    sb.Append(", ");
-                }
+                    sb.Append(',').Append(' ');
 
                 sb.AppendTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true);
 
                 if (i >= TupleNames.Count)
-                {
                     continue;
-                }
 
                 var argName = TupleNames[i];
                 if (argName == null)
-                {
                     continue;
-                }
 
-                sb.Append(" ");
+                sb.Append(' ');
                 sb.Append(argName);
             }
 
-            sb.Append(")");
+            sb.Append(')');
         }
     }
 }

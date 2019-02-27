@@ -15,7 +15,7 @@ namespace Apkd.Internal
     {
         internal static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
 
-        private readonly List<EnhancedStackFrame> _frames;
+        readonly List<EnhancedStackFrame> _frames;
 
         // Summary:
         //     Initializes a new instance of the System.Diagnostics.StackTrace class using the
@@ -90,14 +90,11 @@ namespace Apkd.Internal
         internal void Append(StringBuilder sb)
         {
             var frames = _frames;
-            var count = frames.Count;
             bool loggedFullFilepath = false;
 
-            for (var i = 0; i < count; i++)
+            for (int i = 0, n = frames.Count; i < n; i++)
             {
-                if (i > 0)
-                    sb.Append('\n');
-
+                sb.Append('\n');
                 var frame = frames[i];
 
                 if (frame.IsEmpty)
@@ -138,19 +135,5 @@ namespace Apkd.Internal
         EnumerableIList<EnhancedStackFrame> GetEnumerator() => EnumerableIList.Create(_frames);
         IEnumerator<EnhancedStackFrame> IEnumerable<EnhancedStackFrame>.GetEnumerator() => _frames.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _frames.GetEnumerator();
-
-        /// <summary>
-        /// Tries to convert a given <paramref name="filePath"/> to a full path.
-        /// Returns original value if the conversion isn't possible or a given path is relative.
-        /// </summary>
-        internal static string TryGetFullPath(string filePath)
-        {
-            if (Uri.TryCreate(filePath, UriKind.Absolute, out var uri) && uri.IsFile)
-            {
-                return Uri.UnescapeDataString(uri.AbsolutePath);
-            }
-
-            return filePath;
-        }
     }
 }

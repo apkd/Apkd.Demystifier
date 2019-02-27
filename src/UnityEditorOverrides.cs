@@ -23,9 +23,9 @@ namespace Apkd.Internal
                 var temp = CachedBuilderLarge.Clear();
                 return new EnhancedStackTrace(stackTrace).ToString(temp);
             }
-            catch
+            catch (Exception e)
             {
-                return $"Failed to post-process stacktrace:\n" + stackTrace;
+                return $"Failed to extract stacktrace:\n{stackTrace}\n=== Extractor error: ===\n{e}";
             }
         }
 
@@ -91,8 +91,7 @@ namespace Apkd.Internal
                     int boldStart = 0;
                     for (int i = boldEnd; i >= 0; --i)
                     {
-                        char c = line[i];
-                        if (c == '.' || c == '+')
+                        if (line[i] == '.')
                         {
                             boldStart = i;
                             break;

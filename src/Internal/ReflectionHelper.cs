@@ -13,23 +13,19 @@ namespace Apkd.Internal
     /// </summary>
     internal static class ReflectionHelper
     {
-        private static PropertyInfo tranformerNamesLazyPropertyInfo;
+        static PropertyInfo tranformerNamesLazyPropertyInfo;
 
         /// <summary>
         /// Returns true if <paramref name="type"/> is <code>System.Runtime.CompilerServices.IsReadOnlyAttribute</code>.
         /// </summary>
         internal static bool IsReadOnlyAttribute(this Type type)
-        {
-            return type.Namespace == "System.Runtime.CompilerServices" && type.Name == "IsReadOnlyAttribute";
-        }
+            => type.Namespace == "System.Runtime.CompilerServices" && type.Name == "IsReadOnlyAttribute";
 
         /// <summary>
         /// Returns true if the <paramref name="type"/> is a value tuple type.
         /// </summary>
         internal static bool IsValueTuple(this Type type)
-        {
-            return type.Namespace == "System" && type.Name.Contains("ValueTuple`");
-        }
+            => type.Namespace == "System" && type.Name.Contains("ValueTuple`");
 
         /// <summary>
         /// Returns true if the given <paramref name="attribute"/> is of type <code>TupleElementNameAttribute</code>.
@@ -60,10 +56,8 @@ namespace Apkd.Internal
             return (IList<string>)propertyInfo.GetValue(attribute);
         }
 
-        private static PropertyInfo GetTransformNamesPropertyInfo(Type attributeType)
-        {
-            return LazyInitializer.EnsureInitialized(ref tranformerNamesLazyPropertyInfo,
+        static PropertyInfo GetTransformNamesPropertyInfo(Type attributeType)
+            => LazyInitializer.EnsureInitialized(ref tranformerNamesLazyPropertyInfo,
                 () => attributeType.GetProperty("TransformNames", BindingFlags.Instance | BindingFlags.Public));
-        }
     }
 }

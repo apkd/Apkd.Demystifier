@@ -8,9 +8,9 @@ namespace Apkd.Internal
 {
     internal class EnhancedStackFrame : StackFrame
     {
-        private string _fileName;
-        private int _lineNumber;
-        private int _colNumber;
+        string _fileName;
+        int _lineNumber;
+        int _colNumber;
 
         internal StackFrame StackFrame { get; }
 
@@ -50,6 +50,7 @@ namespace Apkd.Internal
         {
             if (string.IsNullOrWhiteSpace(_fileName))
                 return null;
+
             if (_fileName.StartsWith(@"C:\buildslave\unity", System.StringComparison.InvariantCultureIgnoreCase))
                 return null;
 

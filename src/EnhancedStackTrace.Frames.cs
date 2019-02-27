@@ -22,6 +22,7 @@ namespace Apkd.Internal
     internal partial class EnhancedStackTrace
     {
         static readonly Type StackTraceHiddenAttibuteType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
+        static readonly MethodInfo UnityEditorInspectorWindowOnGuiMethod = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.InspectorWindow", false)?.GetMethod("OnGUI", NonPublic | Instance);
 
         static List<EnhancedStackFrame> GetFrames(Exception exception)
         {
@@ -42,6 +43,8 @@ namespace Apkd.Internal
             if (stackFrames == null)
                 return frames;
 
+            bool collapseNext = false;
+
             for (var i = 0; i < stackFrames.Length; i++)
             {
                 var frame = stackFrames[i];
@@ -50,12 +53,28 @@ namespace Apkd.Internal
                 if (method == null)
                     continue;
 
-                if (ShouldCollapseStackFrames(method) && i < stackFrames.Length - 1)
-                    if (ShouldCollapseStackFrames(stackFrames[i + 1].GetMethod()))
+                bool hasNextFrame = i < stackFrames.Length - 1;
+
+                bool shouldExcludeFromCollapse = ShouldExcludeFromCollapse(method);
+                if (shouldExcludeFromCollapse)
+                    collapseNext = false;
+
+                if ((collapseNext || ShouldCollapseStackFrames(method)) && hasNextFrame && !shouldExcludeFromCollapse)
+                {
+                    var nextFrame = stackFrames[i + 1].GetMethod();
+                    if (ShouldCollapseStackFrames(nextFrame))
+                    {
+                        collapseNext = true;
                         continue;
+                    }
+                    else
+                    {
+                        collapseNext = false;
+                    }
+                }
 
                 // Always show last stackFrame
-                if (!ShouldShowInStackTrace(method) && i < stackFrames.Length - 1)
+                if (!ShouldShowInStackTrace(method) && hasNextFrame)
                     continue;
 
                 var fileName = frame.GetFileName();
@@ -106,7 +125,7 @@ namespace Apkd.Internal
             // Method name
             methodDisplayInfo.MethodBase = method;
             methodDisplayInfo.Name = methodName;
-            if (method.Name.IndexOf("<") >= 0)
+            if (method.Name.IndexOf('<') >= 0)
             {
                 if (TryResolveGeneratedName(ref method, out type, out methodName, out subMethodName, out var kind, out var ordinal))
                 {
@@ -365,7 +384,7 @@ namespace Apkd.Internal
             var lamdaStart = method.Name.IndexOf((char)GeneratedNameKind.LambdaMethod + "__") + 3;
             if (lamdaStart > 3)
             {
-                var secondStart = method.Name.IndexOf("_", lamdaStart) + 1;
+                var secondStart = method.Name.IndexOf('_', lamdaStart) + 1;
                 if (secondStart > 0)
                 {
                     lamdaStart = secondStart;
@@ -553,12 +572,12 @@ namespace Apkd.Internal
         static string GetValueTupleParameterName(IList<string> tupleNames, Type parameterType)
         {
             var sb = new StringBuilder();
-            sb.Append("(");
+            sb.Append('(');
             var args = parameterType.GetGenericArguments();
             for (var i = 0; i < args.Length; i++)
             {
                 if (i > 0)
-                    sb.Append(", ");
+                    sb.Append(',').Append(' ');
 
                 sb.Append(TypeNameHelper.GetTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true));
 
@@ -569,23 +588,31 @@ namespace Apkd.Internal
                 if (argName == null)
                     continue;
 
-                sb.Append(" ");
+                sb.Append(' ');
                 sb.Append(argName);
             }
 
-            sb.Append(")");
+            sb.Append(')');
             return sb.ToString();
         }
 
         static bool ShouldCollapseStackFrames(MethodBase method)
         {
-            var type = method.DeclaringType.FullName;
-            return type.StartsWith("UnityEditor.") ||
-                type.StartsWith("UnityEngine.") ||
-                type.StartsWith("System.") ||
-                type.StartsWith("UnityScript.Lang.") ||
-                type.StartsWith("Odin.Editor.") ||
-                type.StartsWith("Boo.Lang.");
+            var typeName = method.DeclaringType.FullName;
+            return typeName.StartsWith("UnityEditor.") ||
+                typeName.StartsWith("UnityEngine.") ||
+                typeName.StartsWith("System.") ||
+                typeName.StartsWith("UnityScript.Lang.") ||
+                typeName.StartsWith("Odin.Editor.") ||
+                typeName.StartsWith("Boo.Lang.");
+        }
+
+        static bool ShouldExcludeFromCollapse(MethodBase method)
+        {
+            if (method == UnityEditorInspectorWindowOnGuiMethod)
+                return true;
+
+            return false;
         }
 
         static bool ShouldShowInStackTrace(MethodBase method)

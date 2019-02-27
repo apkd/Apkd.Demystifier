@@ -6,11 +6,11 @@ namespace Apkd.Internal
 {
     internal class ILReader
     {
-        private static OpCode[] singleByteOpCode;
-        private static OpCode[] doubleByteOpCode;
+        static OpCode[] singleByteOpCode;
+        static OpCode[] doubleByteOpCode;
 
-        private readonly byte[] _cil;
-        private int ptr;
+        readonly byte[] _cil;
+        int ptr;
 
         internal ILReader(byte[] cil) => _cil = cil;
 
@@ -46,16 +46,15 @@ namespace Apkd.Internal
             {
                 case OperandType.InlineMethod:
                     MetadataToken = ReadInt();
+
                     Type[] methodArgs = null;
                     if (methodInfo.GetType() != typeof(ConstructorInfo) && !methodInfo.GetType().IsSubclassOf(typeof(ConstructorInfo)))
-                    {
                         methodArgs = methodInfo.GetGenericArguments();
-                    }
+
                     Type[] typeArgs = null;
                     if (methodInfo.DeclaringType != null)
-                    {
                         typeArgs = methodInfo.DeclaringType.GetGenericArguments();
-                    }
+
                     try
                     {
                         return methodInfo.Module.ResolveMember(MetadataToken, typeArgs, methodArgs);
@@ -102,9 +101,7 @@ namespace Apkd.Internal
             }
 
             for (var i = 0; i < inlineLength; i++)
-            {
                 ReadByte();
-            }
 
             return null;
         }
