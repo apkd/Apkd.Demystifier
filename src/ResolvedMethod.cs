@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Collections.Generic.Enumerable;
 using System.Reflection;
 using System.Text;
+using System.Linq;
 
 namespace Apkd.Internal
 {
@@ -41,37 +42,29 @@ namespace Apkd.Internal
 
         internal StringBuilder Append(StringBuilder builder)
         {
-#if !APKD_STACKTRACE_NOFORMAT
-            builder.Append('‹');
-#endif
-            
-            if (IsAsync)
-                builder.Append("async ");
-
             if (ReturnParameter != null)
-                ReturnParameter.Append(builder);
+            {
+                if (IsAsync)
+                    ReturnParameter.Prefix2 = "async";
 
-#if !APKD_STACKTRACE_NOFORMAT
-            builder.Append('›');
-#endif
-            builder.Append(' ');
+                ReturnParameter.Append(builder);
+                builder.Append(' ');
+            }
+
+            bool hasSubMethodOrLambda = !string.IsNullOrEmpty(SubMethod) || IsLambda;
 
             if (DeclaringType != null)
             {
 
                 if (Name == ".ctor")
                 {
-                    if (string.IsNullOrEmpty(SubMethod) && !IsLambda)
+                    if (!hasSubMethodOrLambda)
                     {
                         builder
                             .Append(".new ");
 
                         AppendDeclaringTypeName(builder)
                             .Append(Name);
-
-#if !APKD_STACKTRACE_NOFORMAT
-                        builder.Append('‼');
-#endif
                     }
                 }
                 else if (Name == ".cctor")
@@ -79,21 +72,12 @@ namespace Apkd.Internal
                     builder.Append("static ");
 
                     AppendDeclaringTypeName(builder);
-
-#if !APKD_STACKTRACE_NOFORMAT
-                    builder.Append('‼');
-#endif
                 }
                 else
                 {
                     AppendDeclaringTypeName(builder)
                         .Append('.')
                         .Append(Name);
-
-
-#if !APKD_STACKTRACE_NOFORMAT
-                    builder.Append('‼');
-#endif
                 }
             }
             else
@@ -101,14 +85,15 @@ namespace Apkd.Internal
                 builder
                     .Append('.')
                     .Append(Name);
-                
-#if !APKD_STACKTRACE_NOFORMAT
-                builder.Append('‼');
-#endif
+
             }
             builder.Append(GenericArguments);
 
-#if APKD_STACKTRACE_SHOWPARAMS
+            if (!hasSubMethodOrLambda)
+                builder.AppendFormattingChar('‼');
+
+#if !APKD_STACKTRACE_HIDEPARAMS
+#if APKD_STACKTRACE_FULLPARAMS
             builder.Append('(');
             if (MethodBase != null)
             {
@@ -128,11 +113,35 @@ namespace Apkd.Internal
                 builder.Append('?');
             }
             builder.Append(')');
+#else
+            char GetParamAlphabeticalName(int index) => (char)((int)'a' + index);
+            char? GetParamNameFirstLetter(ResolvedParameter param) => string.IsNullOrEmpty(param?.Name) ? null as char? : param.Name[0];
+
+            builder.Append('(');
+            if (MethodBase != null)
+            {
+                var isFirst = true;
+                for (int i = 0, n = Parameters.Count; i < n; ++i)
+                {
+                    if (isFirst)
+                        isFirst = false;
+                    else
+                        builder.Append(',').Append(' ');
+
+                    builder.Append(GetParamNameFirstLetter(Parameters[i]) ?? GetParamAlphabeticalName(i));
+                }
+            }
+            else
+            {
+                builder.Append('?');
+            }
+            builder.Append(')');
+#endif
 #endif
 
-            if (!string.IsNullOrEmpty(SubMethod) || IsLambda)
+            if (hasSubMethodOrLambda)
             {
-                builder.Append("()+");
+                builder.Append('+');
                 builder.Append(SubMethod);
                 if (IsLambda)
                 {
@@ -158,7 +167,7 @@ namespace Apkd.Internal
                         builder.Append('?');
                     }
                     builder.Append(')');
-                    builder.Append("=>{}");
+                    builder.Append("=>{…}");
 
                     if (Ordinal.HasValue)
                     {
@@ -168,6 +177,7 @@ namespace Apkd.Internal
                         builder.Append(']');
                     }
                 }
+                builder.AppendFormattingChar('‼');
             }
 
             return builder;
