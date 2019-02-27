@@ -715,10 +715,12 @@ namespace Apkd.Internal
             if (typeFullName.StartsWith("System.Runtime.CompilerServices.Async"))
                 return false;
 
+#if ODIN_INSPECTOR
             // support for the Sirenix.OdinInspector package
 
             if (typeFullName.StartsWith("Sirenix.OdinInspector"))
                 return false;
+#endif
 
             // support for the Apkd.AsyncManager package
 
