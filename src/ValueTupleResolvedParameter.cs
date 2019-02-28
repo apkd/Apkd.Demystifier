@@ -7,11 +7,11 @@ using System.Text;
 
 namespace Apkd.Internal 
 {
-    internal class ValueTupleResolvedParameter : ResolvedParameter
+    internal sealed class ValueTupleResolvedParameter : ResolvedParameter
     {
         internal IList<string> TupleNames { get; set; }
 
-        protected override void AppendTypeName(StringBuilder sb)
+        internal override void AppendTypeName(StringBuilder sb)
         {
             if (ResolvedType.IsValueTuple())
             {
@@ -42,12 +42,14 @@ namespace Apkd.Internal
                 if (i >= TupleNames.Count)
                     continue;
 
+#if APKD_STACKTRACE_FULLPARAMS
                 var argName = TupleNames[i];
                 if (argName == null)
                     continue;
 
                 sb.Append(' ');
                 sb.Append(argName);
+#endif
             }
 
             sb.Append(')');

@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Apkd.Internal
 {
-    internal class ResolvedMethod
+    internal sealed class ResolvedMethod
     {
         internal MethodBase MethodBase { get; set; }
 
@@ -113,7 +113,7 @@ namespace Apkd.Internal
                 builder.Append('?');
             }
             builder.Append(')');
-#else
+#elif APKD_STACKTRACE_SHORTPARAMS
             char GetParamAlphabeticalName(int index) => (char)((int)'a' + index);
             char? GetParamNameFirstLetter(ResolvedParameter param) => string.IsNullOrEmpty(param?.Name) ? null as char? : param.Name[0];
 
@@ -121,6 +121,7 @@ namespace Apkd.Internal
             if (MethodBase != null)
             {
                 var isFirst = true;
+                builder.AppendFormattingChar('‹');
                 for (int i = 0, n = Parameters.Count; i < n; ++i)
                 {
                     if (isFirst)
@@ -130,6 +131,29 @@ namespace Apkd.Internal
 
                     builder.Append(GetParamNameFirstLetter(Parameters[i]) ?? GetParamAlphabeticalName(i));
                 }
+                builder.AppendFormattingChar('›');
+            }
+            else
+            {
+                builder.Append('?');
+            }
+            builder.Append(')');
+#else
+            builder.Append('(');
+            if (MethodBase != null)
+            {
+                var isFirst = true;
+                builder.AppendFormattingChar('‹');
+                foreach (var param in Parameters)
+                {
+                    if (isFirst)
+                        isFirst = false;
+                    else
+                        builder.Append(',').Append(' ');
+
+                    param.AppendTypeName(builder);
+                }
+                builder.AppendFormattingChar('›');
             }
             else
             {
@@ -149,25 +173,29 @@ namespace Apkd.Internal
                     if (SubMethodBase != null)
                     {
                         var isFirst = true;
+                        builder.AppendFormattingChar('‹');
                         foreach (var param in SubMethodParameters)
                         {
                             if (isFirst)
-                            {
                                 isFirst = false;
-                            }
                             else
-                            {
                                 builder.Append(',').Append(' ');
-                            }
-                            param.Append(builder);
+
+                            param.AppendTypeName(builder);
                         }
+                        builder.AppendFormattingChar('›');
                     }
                     else
                     {
                         builder.Append('?');
                     }
-                    builder.Append(')');
-                    builder.Append("=>{…}");
+                    builder.Append(")➞ ");
+
+                    var returnType = (SubMethodBase as MethodInfo)?.ReturnType;
+                    if (returnType != null)
+                        TypeNameHelper.AppendTypeDisplayName(builder, returnType, fullName: false, includeGenericParameterNames: false);
+                    else
+                        builder.Append("{…}");
 
                     if (Ordinal.HasValue)
                     {
@@ -176,16 +204,32 @@ namespace Apkd.Internal
                         builder.Append(Ordinal);
                         builder.Append(']');
                     }
+                    builder.AppendFormattingChar('‼');
                 }
-                builder.AppendFormattingChar('‼');
+                else
+                {
+                    builder.AppendFormattingChar('‼');
+                    builder.Append('(');
+                    var isFirst = true;
+                    builder.AppendFormattingChar('‹');
+                    foreach (var param in SubMethodParameters)
+                    {
+                        if (isFirst)
+                            isFirst = false;
+                        else
+                            builder.Append(',').Append(' ');
+
+                        param.AppendTypeName(builder);
+                    }
+                    builder.AppendFormattingChar('›');
+                    builder.Append(')');
+                }
             }
 
             return builder;
         }
 
-        private StringBuilder AppendDeclaringTypeName(StringBuilder builder)
-        {
-            return DeclaringType != null ? builder.AppendTypeDisplayName(DeclaringType, fullName: true, includeGenericParameterNames: true) : builder;
-        }
+        StringBuilder AppendDeclaringTypeName(StringBuilder builder)
+            => DeclaringType != null ? builder.AppendTypeDisplayName(DeclaringType, fullName: true, includeGenericParameterNames: true) : builder;
     }
 }

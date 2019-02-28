@@ -40,13 +40,13 @@ namespace Apkd.Internal
         internal static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false)
         {
             var builder = new StringBuilder();
-            ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
+            ProcessType(builder, type, (fullName, includeGenericParameterNames));
             return builder.ToString();
         }
 
         internal static StringBuilder AppendTypeDisplayName(this StringBuilder builder, Type type, bool fullName = true, bool includeGenericParameterNames = false)
         {
-            ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
+            ProcessType(builder, type, (fullName, includeGenericParameterNames));
             return builder;
         }
 
@@ -56,9 +56,7 @@ namespace Apkd.Internal
         internal static string GetTypeNameForGenericType(Type type)
         {
             if (!type.IsGenericType)
-            {
                 throw new ArgumentException("The given type should be generic", nameof(type));
-            }
 
             var genericPartIndex = type.Name.IndexOf('`');
             System.Diagnostics.Debug.Assert(genericPartIndex >= 0);
@@ -66,7 +64,7 @@ namespace Apkd.Internal
             return type.Name.Substring(0, genericPartIndex);
         }
 
-        private static void ProcessType(StringBuilder builder, Type type, DisplayNameOptions options)
+        static void ProcessType(StringBuilder builder, Type type, (bool FullName, bool IncludeGenericParameterNames) options)
         {
             if (type.IsGenericType)
             {
@@ -88,9 +86,7 @@ namespace Apkd.Internal
             else if (type.IsGenericParameter)
             {
                 if (options.IncludeGenericParameterNames)
-                {
                     builder.Append(type.Name);
-                }
             }
             else
             {
@@ -98,13 +94,11 @@ namespace Apkd.Internal
             }
         }
 
-        private static void ProcessArrayType(StringBuilder builder, Type type, DisplayNameOptions options)
+        static void ProcessArrayType(StringBuilder builder, Type type, (bool FullName, bool IncludeGenericParameterNames) options)
         {
             var innerType = type;
             while (innerType.IsArray)
-            {
                 innerType = innerType.GetElementType();
-            }
 
             ProcessType(builder, innerType, options);
 
@@ -117,13 +111,11 @@ namespace Apkd.Internal
             }
         }
 
-        private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, DisplayNameOptions options)
+        static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, (bool FullName, bool IncludeGenericParameterNames) options)
         {
             var offset = 0;
             if (type.IsNested)
-            {
                 offset = type.DeclaringType.GetGenericArguments().Length;
-            }
 
             if (options.FullName)
             {
@@ -131,6 +123,7 @@ namespace Apkd.Internal
                 {
                     ProcessGenericType(builder, type.DeclaringType, genericArguments, offset, options);
                     builder.Append('+');
+                    options.FullName = false;
                 }
                 else if (!string.IsNullOrEmpty(type.Namespace))
                 {
@@ -153,30 +146,13 @@ namespace Apkd.Internal
             {
                 ProcessType(builder, genericArguments[i], options);
                 if (i + 1 == length)
-                {
                     continue;
-                }
 
                 builder.Append(',');
                 if (options.IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter)
-                {
                     builder.Append(' ');
-                }
             }
             builder.Append('>');
-        }
-
-        private struct DisplayNameOptions
-        {
-            internal DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
-            {
-                FullName = fullName;
-                IncludeGenericParameterNames = includeGenericParameterNames;
-            }
-
-            internal bool FullName { get; }
-
-            internal bool IncludeGenericParameterNames { get; }
         }
     }
 }

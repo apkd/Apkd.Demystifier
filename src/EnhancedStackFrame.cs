@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Apkd.Internal
 {
-    internal class EnhancedStackFrame : StackFrame
+    internal sealed class EnhancedStackFrame : StackFrame
     {
         string _fileName;
         int _lineNumber;

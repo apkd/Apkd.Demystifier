@@ -71,6 +71,7 @@ namespace Apkd.Internal
 
         static Detour()
         {
+#if !APKD_STACKTRACE_DISABLE
             TryDetourFromTo(
                 src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static),
                 dst: typeof(UnityEditorOverrides).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static)
@@ -85,6 +86,7 @@ namespace Apkd.Internal
                 src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(ExtractFormattedStackTrace), NonPublic | Static),
                 dst: typeof(UnityEditorOverrides).GetMethod(nameof(ExtractFormattedStackTrace), NonPublic | Static)
             );
+#endif
         }
     }
 }

@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Apkd.Internal
 {
-    internal partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
+    internal sealed partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
     {
         internal static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
 
@@ -31,9 +31,7 @@ namespace Apkd.Internal
         internal EnhancedStackTrace(Exception e)
         {
             if (e == null)
-            {
                 throw new ArgumentNullException(nameof(e));
-            }
 
             _frames = GetFrames(e);
         }
@@ -42,9 +40,7 @@ namespace Apkd.Internal
         internal EnhancedStackTrace(StackTrace stackTrace)
         {
             if (stackTrace == null)
-            {
                 throw new ArgumentNullException(nameof(stackTrace));
-            }
 
             _frames = GetFrames(stackTrace);
         }
@@ -79,7 +75,8 @@ namespace Apkd.Internal
 
         public string ToString(StringBuilder sb)
         {
-            if (_frames == null || _frames.Count == 0) return "";
+            if (_frames == null || _frames.Count == 0)
+                return "";
 
             Append(sb);
 
@@ -89,13 +86,12 @@ namespace Apkd.Internal
 
         internal void Append(StringBuilder sb)
         {
-            var frames = _frames;
             bool loggedFullFilepath = false;
 
-            for (int i = 0, n = frames.Count; i < n; i++)
+            for (int i = 0, n = _frames.Count; i < n; i++)
             {
                 sb.Append('\n');
-                var frame = frames[i];
+                var frame = _frames[i];
 
                 if (frame.IsEmpty)
                 {

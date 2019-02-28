@@ -19,11 +19,11 @@ using static System.Reflection.BindingFlags;
 
 namespace Apkd.Internal
 {
-    internal partial class EnhancedStackTrace
+    internal sealed partial class EnhancedStackTrace
     {
         static readonly Type StackTraceHiddenAttibuteType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
         static readonly MethodInfo UnityEditorInspectorWindowOnGuiMethod = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.InspectorWindow", false)?.GetMethod("OnGUI", NonPublic | Instance);
-
+        static readonly ThreadLocal<StringBuilder> TempStringBuilder = new ThreadLocal<StringBuilder>(() => new StringBuilder(capacity: 256));
         static List<EnhancedStackFrame> GetFrames(Exception exception)
         {
             if (exception == null)
@@ -35,57 +35,81 @@ namespace Apkd.Internal
             return GetFrames(stackTrace);
         }
 
+        static readonly FieldInfo capturedTracesFieldInfo = typeof(StackTrace).GetField("captured_traces", NonPublic | Instance);
+
+        static StackTrace[] GetInnerStackTraces(StackTrace st)
+            => capturedTracesFieldInfo.GetValue(st) as StackTrace[] ?? Array.Empty<StackTrace>();
+
         static List<EnhancedStackFrame> GetFrames(StackTrace stackTrace)
         {
-            var frames = new List<EnhancedStackFrame>();
-            var stackFrames = stackTrace.GetFrames();
-
-            if (stackFrames == null)
-                return frames;
-
-            bool collapseNext = false;
-
-            for (var i = 0; i < stackFrames.Length; i++)
+            IEnumerable<EnhancedStackFrame> EnumerateEnhancedFrames(StackTrace st)
             {
-                var frame = stackFrames[i];
-                var method = frame.GetMethod();
-
-                if (method == null)
-                    continue;
-
-                bool hasNextFrame = i < stackFrames.Length - 1;
-
-                bool shouldExcludeFromCollapse = ShouldExcludeFromCollapse(method);
-                if (shouldExcludeFromCollapse)
-                    collapseNext = false;
-
-                if ((collapseNext || ShouldCollapseStackFrames(method)) && hasNextFrame && !shouldExcludeFromCollapse)
+                IEnumerable<StackFrame> EnumerateFrames(StackTrace st2)
                 {
-                    var nextFrame = stackFrames[i + 1].GetMethod();
-                    if (ShouldCollapseStackFrames(nextFrame))
+                    foreach (var inner in GetInnerStackTraces(st2))
+                        foreach (var frame in EnumerateFrames(inner))
+                            yield return frame;
+
+                    for (var i = 0; i < st2.FrameCount; i++)
+                        yield return st2.GetFrame(i);
+                }
+
+                EnhancedStackFrame MakeEnhancedFrame(StackFrame frame, MethodBase method)
+                    => new EnhancedStackFrame(
+                        frame,
+                        methodInfo: GetMethodDisplayString(method),
+                        fileName: frame.GetFileName(),
+                        lineNumber: frame.GetFileLineNumber(),
+                        colNumber: frame.GetFileColumnNumber());
+
+                bool collapseNext = false;
+                StackFrame current = null;
+
+                foreach (var next in EnumerateFrames(stackTrace))
+                {
+                    try
                     {
-                        collapseNext = true;
-                        continue;
+                        if (current != null)
+                        {
+                            var method = current.GetMethod();
+
+                            if (method == null) // TODO: remove this
+                                continue;
+
+                            bool shouldExcludeFromCollapse = ShouldExcludeFromCollapse(method);
+                            if (shouldExcludeFromCollapse)
+                                collapseNext = false;
+
+                            if ((collapseNext || ShouldCollapseStackFrames(method)) && !shouldExcludeFromCollapse)
+                            {
+                                if (ShouldCollapseStackFrames(next.GetMethod()))
+                                {
+                                    collapseNext = true;
+                                    continue;
+                                }
+                                else
+                                {
+                                    collapseNext = false;
+                                }
+                            }
+
+                            if (!ShouldShowInStackTrace(method))
+                                continue;
+
+                            yield return MakeEnhancedFrame(current, method);
+                        }
                     }
-                    else
+                    finally
                     {
-                        collapseNext = false;
+                        current = next;
                     }
                 }
 
-                // Always show last stackFrame
-                if (!ShouldShowInStackTrace(method) && hasNextFrame)
-                    continue;
-
-                var fileName = frame.GetFileName();
-                var row = frame.GetFileLineNumber();
-                var column = frame.GetFileColumnNumber();
-                var ilOffset = frame.GetILOffset();
-                var stackFrame = new EnhancedStackFrame(frame, GetMethodDisplayString(method), fileName, row, column);
-                frames.Add(stackFrame);
+                if (current != null)
+                    yield return MakeEnhancedFrame(current, current.GetMethod());
             }
 
-            return frames;
+            return EnumerateEnhancedFrames(stackTrace).ToList();
         }
 
         internal static ResolvedMethod GetMethodDisplayString(MethodBase originMethod)
@@ -96,10 +120,7 @@ namespace Apkd.Internal
 
             var method = originMethod;
 
-            var methodDisplayInfo = new ResolvedMethod
-            {
-                SubMethodBase = method
-            };
+            var methodDisplayInfo = new ResolvedMethod { SubMethodBase = method };
 
             // Type name
             var type = method.DeclaringType;
@@ -200,9 +221,21 @@ namespace Apkd.Internal
             if (method.IsGenericMethod)
             {
                 var genericArguments = method.GetGenericArguments();
-                var genericArgumentsString = string.Join(", ", genericArguments
-                    .Select(arg => TypeNameHelper.GetTypeDisplayName(arg, fullName: false, includeGenericParameterNames: true)));
-                methodDisplayInfo.GenericArguments += "<" + genericArgumentsString + ">";
+                var builder = TempStringBuilder.Value.Clear();
+
+                builder.Append('<');
+
+                for (int i = 0; i < genericArguments.Length; ++i)
+                {
+                    if (i > 0)
+                        builder.Append(',').Append(' ');
+
+                    TypeNameHelper.AppendTypeDisplayName(builder, genericArguments[i], fullName: false, includeGenericParameterNames: true);
+                }
+
+                builder.Append('>');
+
+                methodDisplayInfo.GenericArguments = builder.ToString();
                 methodDisplayInfo.ResolvedGenericArguments = genericArguments;
             }
 
@@ -212,9 +245,7 @@ namespace Apkd.Internal
             {
                 var parameterList = new List<ResolvedParameter>(parameters.Length);
                 foreach (var parameter in parameters)
-                {
                     parameterList.Add(GetParameter(parameter));
-                }
 
                 methodDisplayInfo.Parameters = parameterList;
             }
@@ -262,21 +293,18 @@ namespace Apkd.Internal
             switch (kind)
             {
                 case GeneratedNameKind.LocalFunction:
-                    {
-                        var localNameStart = generatedName.IndexOf((char)kind, closeBracketOffset + 1);
-                        if (localNameStart < 0) break;
-                        localNameStart += 3;
-
-                        if (localNameStart < generatedName.Length)
-                        {
-                            var localNameEnd = generatedName.IndexOf("|", localNameStart);
-                            if (localNameEnd > 0)
-                            {
-                                subMethodName = generatedName.Substring(localNameStart, localNameEnd - localNameStart);
-                            }
-                        }
+                    var localNameStart = generatedName.IndexOf((char)kind, closeBracketOffset + 1);
+                    if (localNameStart < 0)
                         break;
+                    localNameStart += 3;
+
+                    if (localNameStart < generatedName.Length)
+                    {
+                        var localNameEnd = generatedName.IndexOf("|", localNameStart);
+                        if (localNameEnd > 0)
+                            subMethodName = generatedName.Substring(localNameStart, localNameEnd - localNameStart);
                     }
+                    break;
                 case GeneratedNameKind.LambdaMethod:
                     subMethodName = "";
                     break;
@@ -381,6 +409,7 @@ namespace Apkd.Internal
 
         static void GetOrdinal(MethodBase method, ref int? ordinal)
         {
+#if APKD_STACKTRACE_LAMBDAORDINALS
             var lamdaStart = method.Name.IndexOf((char)GeneratedNameKind.LambdaMethod + "__") + 3;
             if (lamdaStart > 3)
             {
@@ -415,6 +444,7 @@ namespace Apkd.Internal
                 if (count <= 1)
                     ordinal = null;
             }
+#endif
         }
 
         static string GetMatchHint(GeneratedNameKind kind, MethodBase method)
@@ -579,7 +609,8 @@ namespace Apkd.Internal
                 if (i > 0)
                     sb.Append(',').Append(' ');
 
-                sb.Append(TypeNameHelper.GetTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true));
+
+                TypeNameHelper.AppendTypeDisplayName(sb, args[i], fullName: false, includeGenericParameterNames: true);
 
                 if (i >= tupleNames.Count)
                     continue;

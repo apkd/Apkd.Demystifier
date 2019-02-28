@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 
 namespace Apkd.Internal
 {
-    internal class ILReader
+    internal sealed class ILReader
     {
         static OpCode[] singleByteOpCode;
         static OpCode[] doubleByteOpCode;

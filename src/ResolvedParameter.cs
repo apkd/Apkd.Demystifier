@@ -39,7 +39,7 @@ namespace Apkd.Internal
             return sb;
         }
 
-        protected virtual void AppendTypeName(StringBuilder sb) 
+        internal virtual void AppendTypeName(StringBuilder sb) 
         {
             sb.AppendTypeDisplayName(ResolvedType, fullName: false, includeGenericParameterNames: true);
         }

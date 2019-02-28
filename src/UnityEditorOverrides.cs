@@ -31,86 +31,98 @@ namespace Apkd.Internal
 
         // Unity uses this method to post-process the stack trace before displaying it in the editor.
         // This doesn't affect the output in the log file.
-        internal static string PostprocessStacktrace(string oldString, bool stripEngineInternalInformation)
+        internal static string PostprocessStacktrace(string oldStackTrace, bool stripEngineInternalInformation)
         {
-            if (oldString == null)
-                return String.Empty;
-
-            var output = CachedBuilderLarge.Clear();
-            output.Append('\n');
-
-            var temp = CachedBuilderSmall.Clear();
-            for (int i = 0; i < oldString.Length; ++i)
+#if APKD_STACKTRACE_NOPOSTPROCESS
+            return oldStackTrace;
+#else
+            try
             {
-                char c = oldString[i];
-                temp.Append(c);
+                if (oldStackTrace == null)
+                    return String.Empty;
 
-                // check if we've collected a line into temp
-                if (c == '\n' || i == oldString.Length - 1)
+                var output = CachedBuilderLarge.Clear();
+                output.Append('\n');
+
+                var temp = CachedBuilderSmall.Clear();
+                for (int i = 0; i < oldStackTrace.Length; ++i)
                 {
-                    (bool skip, bool exit) = PostProcessLine(temp, stripEngineInternalInformation);
+                    char c = oldStackTrace[i];
+                    temp.Append(c);
 
-                    if (exit)
-                        break;
+                    // check if we've collected a line into temp
+                    if (c == '\n' || i == oldStackTrace.Length - 1)
+                    {
+                        (bool skip, bool exit) = PostProcessLine(temp, stripEngineInternalInformation);
 
-                    if (!skip)
-                        for (int j = 0; j < temp.Length; ++j)
-                            output.Append(temp[j]); // copy line to output
+                        if (exit)
+                            break;
 
-                    temp.Clear();
+                        if (!skip)
+                            for (int j = 0; j < temp.Length; ++j)
+                                output.Append(temp[j]); // copy line to output
+
+                        temp.Clear();
+                    }
                 }
-            }
 
-            return output.ToString();
+                return output.ToString();
 
-            (bool skip, bool exit) PostProcessLine(StringBuilder line, bool ignoreInternal)
-            {
-                // ignore empty lines
-                if (line.Length == 0 || line.Length == 1 && line[0] == '\n')
-                    return (skip: true, exit: false);
+                (bool skip, bool exit) PostProcessLine(StringBuilder line, bool ignoreInternal)
+                {
+                    // ignore empty lines
+                    if (line.Length == 0 || line.Length == 1 && line[0] == '\n')
+                        return (skip: true, exit: false);
 
-                // mke GameView GUI stack traces skip editor GUI part
-                if (ignoreInternal && line.StartsWith("UnityEditor.EditorGUIUtility:RenderGameViewCameras"))
-                    return (skip: false, exit: true);
+                    // mke GameView GUI stack traces skip editor GUI part
+                    if (ignoreInternal && line.StartsWith("UnityEditor.EditorGUIUtility:RenderGameViewCameras"))
+                        return (skip: false, exit: true);
 
-                line.Insert(0, "│ ");
+                    line.Insert(0, "│ ");
 
-                // unify path names to unix style
-                line.Replace('\\', '/');
+                    // unify path names to unix style
+                    line.Replace('\\', '/');
 
 #if !APKD_STACKTRACE_NOFORMAT
-                // emphasized method return type
-                {
-                    line.Replace("‹", "<i>");
-                    line.Replace("›", "</i>");
-                }
-                // emphasized method name
-                int boldEnd = line.IndexOf('‼');
-                if (boldEnd >= 0)
-                {
-                    int boldStart = 0;
-                    for (int i = boldEnd; i >= 0; --i)
+                    // emphasized method return type
                     {
-                        char c = line[i];
-                        if (c == '.' || c == '+')
-                        {
-                            boldStart = i;
-                            break;
-                        }
+                        line.Replace("‹", "<i>");
+                        line.Replace("›", "</i>");
                     }
-                    line.Replace("‼", "</i></b>");
-                    line.Insert(boldStart + 1, "<b><i>");
-                }
-                // smaller filename and line number
-                if (line.IndexOf('→') >= 0)
-                {
-                    line.Replace("→", "<size=8>");
-                    line.Insert(line.Length - 1, "</size>");
-                }
+                    // emphasized method name
+                    int boldEnd = line.IndexOf('‼');
+                    if (boldEnd >= 0)
+                    {
+                        int boldStart = 0;
+                        for (int i = boldEnd; i >= 0; --i)
+                        {
+                            char c = line[i];
+                            if (c == '.' || c == '+')
+                            {
+                                boldStart = i;
+                                break;
+                            }
+                        }
+                        line.Replace("‼", "</i></b>");
+                        line.Insert(boldStart + 1, "<b><i>");
+                    }
+                    // smaller filename and line number
+                    if (line.IndexOf('→') >= 0)
+                    {
+                        line.Replace("→", "<size=8>");
+                        bool isLastLine = line[line.Length - 1] != '\n';
+                        int endIndex = isLastLine ? line.Length : line.Length - 1;
+                        line.Insert(endIndex, "</size>");
+                    }
 #endif
-
-                return (skip: false, exit: false);
+                    return (skip: false, exit: false);
+                }
             }
+            catch (Exception e)
+            {
+                return $"Failed to post-process stacktrace:\n{oldStackTrace}\n=== Post-Processing error: ===\n{e}";
+            }
+#endif
         }
 
         // Method used to extract the stack trace from an exception.
@@ -147,7 +159,7 @@ namespace Apkd.Internal
                         new EnhancedStackTrace(current).Append(temp);
 
                         temp.AppendLine();
-                        temp.Append("   --- End of inner exception stack trace ---");
+                        temp.Append("Rethrown as:");
                     }
 
                     current = current.InnerException;
