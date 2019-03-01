@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Generic.Enumerable;
 using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 
 namespace Apkd.Internal
 {

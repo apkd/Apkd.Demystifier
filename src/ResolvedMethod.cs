@@ -3,9 +3,7 @@
 
 using System;
 using System.Diagnostics;
-using System.Collections.Generic.Enumerable;
 using System.Reflection;
-using System.Text;
 using System.Linq;
 
 namespace Apkd.Internal
@@ -201,7 +199,7 @@ namespace Apkd.Internal
                     {
                         builder.Append(' ');
                         builder.Append('[');
-                        builder.Append(Ordinal);
+                        builder.Append(Ordinal.Value);
                         builder.Append(']');
                     }
                     builder.AppendFormattingChar('‼');
