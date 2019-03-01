@@ -14,18 +14,20 @@ namespace Apkd.Internal
     internal static class ReflectionHelper
     {
         static PropertyInfo tranformerNamesLazyPropertyInfo;
+        static readonly Type isReadOnlyAttribute = Type.GetType("System.Runtime.CompilerServices.IsReadOnlyAttribute", false);
+        static readonly Type tupleElementNamesAttribute = Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute", false);
 
         /// <summary>
         /// Returns true if <paramref name="type"/> is <code>System.Runtime.CompilerServices.IsReadOnlyAttribute</code>.
         /// </summary>
-        internal static bool IsReadOnlyAttribute(this Type type)
-            => type.Namespace == "System.Runtime.CompilerServices" && type.Name == "IsReadOnlyAttribute";
+        internal static bool IsIsReadOnlyAttribute(this Type type)
+            => type == isReadOnlyAttribute;
 
         /// <summary>
         /// Returns true if the <paramref name="type"/> is a value tuple type.
         /// </summary>
         internal static bool IsValueTuple(this Type type)
-            => type.Namespace == "System" && type.Name.Contains("ValueTuple`");
+            => type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
 
         /// <summary>
         /// Returns true if the given <paramref name="attribute"/> is of type <code>TupleElementNameAttribute</code>.
@@ -34,12 +36,8 @@ namespace Apkd.Internal
         /// To avoid compile-time depencency hell with System.ValueTuple, this method uses reflection and not checks statically that 
         /// the given <paramref name="attribute"/> is <code>TupleElementNameAttribute</code>.
         /// </remarks>
-        internal static bool IsTupleElementNameAttribue(this Attribute attribute)
-        {
-            var attributeType = attribute.GetType();
-            return attributeType.Namespace == "System.Runtime.CompilerServices" &&
-                   attributeType.Name == "TupleElementNamesAttribute";
-        }
+        internal static bool IsTupleElementNameAttribute(this Attribute attribute)
+            => attribute.GetType() == tupleElementNamesAttribute;
 
         /// <summary>
         /// Returns 'TransformNames' property value from a given <paramref name="attribute"/>.
@@ -48,10 +46,9 @@ namespace Apkd.Internal
         /// To avoid compile-time depencency hell with System.ValueTuple, this method uses reflection 
         /// instead of casting the attribute to a specific type.
         /// </remarks>
-        internal static IList<string> GetTransformerNames(this Attribute attribute)
+        internal static IList<string> GetTransformNames(this Attribute attribute)
         {
-            System.Diagnostics.Debug.Assert(attribute.IsTupleElementNameAttribue());
-
+            System.Diagnostics.Debug.Assert(attribute.IsTupleElementNameAttribute());
             var propertyInfo = GetTransformNamesPropertyInfo(attribute.GetType());
             return (IList<string>)propertyInfo.GetValue(attribute);
         }
