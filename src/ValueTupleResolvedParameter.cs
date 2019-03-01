@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace Apkd.Internal 
 {
@@ -39,10 +38,10 @@ namespace Apkd.Internal
 
                 sb.AppendTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true);
 
+#if APKD_STACKTRACE_FULLPARAMS
                 if (i >= TupleNames.Count)
                     continue;
 
-#if APKD_STACKTRACE_FULLPARAMS
                 var argName = TupleNames[i];
                 if (argName == null)
                     continue;

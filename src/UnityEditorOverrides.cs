@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Diagnostics;
 
 namespace Apkd.Internal
@@ -59,8 +58,7 @@ namespace Apkd.Internal
                             break;
 
                         if (!skip)
-                            for (int j = 0; j < temp.Length; ++j)
-                                output.Append(temp[j]); // copy line to output
+                            output.Append(temp); // copy line to output
 
                         temp.Clear();
                     }
@@ -149,16 +147,16 @@ namespace Apkd.Internal
                     else
                     {
                         temp.Append($" ---> ");
-                        temp.AppendLine();
+                        temp.Append('\n');
 
                         if (!string.IsNullOrEmpty(current.Message))
-                            temp.Append(current.GetType()).Append(": ").Append(current.Message).AppendLine();
+                            temp.Append(current.GetType()).Append(": ").Append(current.Message).Append('\n');
                         else
-                            temp.Append(current.GetType()).AppendLine();
+                            temp.Append(current.GetType()).Append('\n');
 
                         new EnhancedStackTrace(current).Append(temp);
 
-                        temp.AppendLine();
+                        temp.Append('\n');
                         temp.Append("Rethrown as:");
                     }
 

@@ -6,13 +6,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Generic.Enumerable;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Reflection.BindingFlags;
@@ -24,6 +22,13 @@ namespace Apkd.Internal
         static readonly Type StackTraceHiddenAttibuteType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
         static readonly MethodInfo UnityEditorInspectorWindowOnGuiMethod = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.InspectorWindow", false)?.GetMethod("OnGUI", NonPublic | Instance);
         static readonly ThreadLocal<StringBuilder> TempStringBuilder = new ThreadLocal<StringBuilder>(() => new StringBuilder(capacity: 256));
+
+        static readonly CacheDictionary<ICustomAttributeProvider, object[]> customAttributeCache
+            = new CacheDictionary<ICustomAttributeProvider, object[]>(cacheSize: 256);
+
+        static readonly CacheDictionary<MethodBase, ResolvedMethod> resolvedMethodCache
+            = new CacheDictionary<MethodBase, ResolvedMethod>(cacheSize: 256);
+
         static List<EnhancedStackFrame> GetFrames(Exception exception)
         {
             if (exception == null)
@@ -38,7 +43,7 @@ namespace Apkd.Internal
         static readonly FieldInfo capturedTracesFieldInfo = typeof(StackTrace).GetField("captured_traces", NonPublic | Instance);
 
         static StackTrace[] GetInnerStackTraces(StackTrace st)
-            => capturedTracesFieldInfo.GetValue(st) as StackTrace[] ?? Array.Empty<StackTrace>();
+            => capturedTracesFieldInfo?.GetValue(st) as StackTrace[] ?? Array.Empty<StackTrace>();
 
         static List<EnhancedStackFrame> GetFrames(StackTrace stackTrace)
         {
@@ -57,7 +62,7 @@ namespace Apkd.Internal
                 EnhancedStackFrame MakeEnhancedFrame(StackFrame frame, MethodBase method)
                     => new EnhancedStackFrame(
                         frame,
-                        methodInfo: GetMethodDisplayString(method),
+                        methodInfo: GetResolvedMethod(method),
                         fileName: frame.GetFileName(),
                         lineNumber: frame.GetFileLineNumber(),
                         colNumber: frame.GetFileColumnNumber());
@@ -109,16 +114,33 @@ namespace Apkd.Internal
                     yield return MakeEnhancedFrame(current, current.GetMethod());
             }
 
-            return EnumerateEnhancedFrames(stackTrace).ToList();
+            var resultList = new List<EnhancedStackFrame>(capacity: stackTrace.FrameCount);
+            foreach (var item in EnumerateEnhancedFrames(stackTrace))
+                resultList.Add(item);
+            return resultList;
         }
 
-        internal static ResolvedMethod GetMethodDisplayString(MethodBase originMethod)
+        static bool IsDefined<T>(MemberInfo member)
+        {
+            foreach (var attr in GetCustomAttributes(member))
+                if (attr is T)
+                    return true;
+            return false;
+        }
+
+        static object[] GetCustomAttributes(ICustomAttributeProvider obj)
+            => customAttributeCache.GetOrInitializeValue(obj, x => x.GetCustomAttributes(inherit: false));
+
+        internal static ResolvedMethod GetResolvedMethod(MethodBase methodBase)
+            => resolvedMethodCache.GetOrInitializeValue(methodBase, x => GetResolvedMethodInternal(methodBase));
+
+        internal static ResolvedMethod GetResolvedMethodInternal(MethodBase methodBase)
         {
             // Special case: no method available
-            if (originMethod == null)
+            if (methodBase == null)
                 return null;
 
-            var method = originMethod;
+            var method = methodBase;
 
             var methodDisplayInfo = new ResolvedMethod { SubMethodBase = method };
 
@@ -128,8 +150,7 @@ namespace Apkd.Internal
             var subMethodName = method.Name;
             var methodName = method.Name;
 
-            if (type != null && type.IsDefined(typeof(CompilerGeneratedAttribute)) &&
-                (typeof(IAsyncStateMachine).IsAssignableFrom(type) || typeof(IEnumerator).IsAssignableFrom(type)))
+            if (type != null && IsDefined<CompilerGeneratedAttribute>(type) && (typeof(IAsyncStateMachine).IsAssignableFrom(type) || typeof(IEnumerator).IsAssignableFrom(type)))
             {
                 methodDisplayInfo.IsAsync = typeof(IAsyncStateMachine).IsAssignableFrom(type);
 
@@ -178,12 +199,12 @@ namespace Apkd.Internal
                                 var value = field.GetValue(field);
                                 if (value is Delegate d)
                                 {
-                                    if (ReferenceEquals(d.Method, originMethod) &&
-                                        d.Target.ToString() == originMethod.DeclaringType.ToString())
+                                    if (ReferenceEquals(d.Method, methodBase) &&
+                                        d.Target.ToString() == methodBase.DeclaringType.ToString())
                                     {
                                         methodDisplayInfo.Name = field.Name;
                                         methodDisplayInfo.IsLambda = false;
-                                        method = originMethod;
+                                        method = methodBase;
                                         break;
                                     }
                                 }
@@ -536,10 +557,10 @@ namespace Apkd.Internal
 
             if (parameterType != null && parameterType.IsByRef)
             {
-                var attribs = parameter.GetCustomAttributes(inherit: false);
+                var attribs = GetCustomAttributes(parameter);
                 if (attribs?.Length > 0)
                     foreach (var attrib in attribs)
-                        if (attrib is Attribute att && att.GetType().IsReadOnlyAttribute())
+                        if (attrib is Attribute att && att.GetType().IsIsReadOnlyAttribute())
                             return "in";
 
                 return "ref";
@@ -565,16 +586,21 @@ namespace Apkd.Internal
 
             if (parameterType.IsGenericType)
             {
-                var customAttribs = parameter.GetCustomAttributes(inherit: false);
+                var customAttribs = GetCustomAttributes(parameter);
 
-                var tupleNameAttribute = customAttribs.OfType<Attribute>().FirstOrDefault(a => a.IsTupleElementNameAttribue());
+                Attribute tupleNameAttribute = null;
+                foreach (var attr in customAttribs)
+                    if (attr is Attribute tena && tena.IsTupleElementNameAttribute())
+                        tupleNameAttribute = tena;
 
-                var tupleNames = tupleNameAttribute?.GetTransformerNames();
+#if APKD_STACKTRACE_FULLPARAMS
+                var tupleNames = tupleNameAttribute?.GetTransformNames();
+#else
+                var tupleNames = null as IList<String>;
+#endif
 
-                if (tupleNames?.Count > 0)
-                {
+                if (tupleNameAttribute != null)
                     return GetValueTupleParameter(tupleNames, prefix, parameter.Name, parameterType);
-                }
             }
 
             if (parameterType.IsByRef)
@@ -629,13 +655,14 @@ namespace Apkd.Internal
 
         static bool ShouldCollapseStackFrames(MethodBase method)
         {
+            var comparison = StringComparison.Ordinal;
             var typeName = method.DeclaringType.FullName;
-            return typeName.StartsWith("UnityEditor.") ||
-                typeName.StartsWith("UnityEngine.") ||
-                typeName.StartsWith("System.") ||
-                typeName.StartsWith("UnityScript.Lang.") ||
-                typeName.StartsWith("Odin.Editor.") ||
-                typeName.StartsWith("Boo.Lang.");
+            return typeName.StartsWith("UnityEditor.", comparison) ||
+                typeName.StartsWith("UnityEngine.", comparison) ||
+                typeName.StartsWith("System.", comparison) ||
+                typeName.StartsWith("UnityScript.Lang.", comparison) ||
+                typeName.StartsWith("Odin.Editor.", comparison) ||
+                typeName.StartsWith("Boo.Lang.", comparison);
         }
 
         static bool ShouldExcludeFromCollapse(MethodBase method)
@@ -725,17 +752,17 @@ namespace Apkd.Internal
             }
 
             // collapse internal async frames
-            if (typeFullName.StartsWith("System.Runtime.CompilerServices.Async"))
+            if (typeFullName.StartsWith("System.Runtime.CompilerServices.Async", StringComparison.Ordinal))
                 return false;
 
 #if ODIN_INSPECTOR
             // support for the Sirenix.OdinInspector package
-            if (typeFullName.StartsWith("Sirenix.OdinInspector"))
+            if (typeFullName.StartsWith("Sirenix.OdinInspector", StringComparison.Ordinal))
                 return false;
 #endif
 
             // support for the Apkd.AsyncManager package
-            if (typeFullName.StartsWith("Apkd.AsyncManager"))
+            if (typeFullName.StartsWith("Apkd.AsyncManager", StringComparison.Ordinal))
                 return false;
 
             // collapse internal unity logging methods
@@ -754,7 +781,14 @@ namespace Apkd.Internal
         static bool IsStackTraceHidden(MemberInfo memberInfo)
         {
             if (!memberInfo.Module.Assembly.ReflectionOnly)
-                return memberInfo.GetCustomAttributes(StackTraceHiddenAttibuteType, false).Length != 0;
+            {
+                foreach (var attr in GetCustomAttributes(memberInfo))
+                {
+                    if (attr.GetType() == StackTraceHiddenAttibuteType)
+                        return true;
+                    return false;
+                }
+            }
 
             EnumerableIList<CustomAttributeData> attributes;
             try
@@ -791,19 +825,19 @@ namespace Apkd.Internal
 
             foreach (var candidateMethod in methods)
             {
-                var attributes = candidateMethod.GetCustomAttributes<StateMachineAttribute>();
+                var attributes = GetCustomAttributes(candidateMethod);
                 if (attributes == null)
                     continue;
 
-                foreach (var asma in attributes)
+                foreach (var attr in attributes)
                 {
-                    if (asma.StateMachineType == declaringType)
+                    if (attr is StateMachineAttribute sma && sma.StateMachineType == declaringType)
                     {
                         method = candidateMethod;
                         declaringType = candidateMethod.DeclaringType;
                         // Mark the iterator as changed; so it gets the + annotation of the original method
                         // async statemachines resolve directly to their builder methods so aren't marked as changed
-                        return asma is IteratorStateMachineAttribute;
+                        return sma is IteratorStateMachineAttribute;
                     }
                 }
             }

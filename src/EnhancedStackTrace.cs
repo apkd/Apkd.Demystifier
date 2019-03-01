@@ -4,10 +4,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Generic.Enumerable;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace Apkd.Internal
 {
@@ -35,7 +33,6 @@ namespace Apkd.Internal
 
             _frames = GetFrames(e);
         }
-
 
         internal EnhancedStackTrace(StackTrace stackTrace)
         {
@@ -104,17 +101,20 @@ namespace Apkd.Internal
                     var filePath = frame.GetFileName();
                     if (!string.IsNullOrEmpty(filePath) && !frame.MethodInfo.Name.StartsWith("Log"))
                     {
-                        if (!loggedFullFilepath)
-                        {
-                            filePath = frame.GetFullFilename();
-                            loggedFullFilepath = true;
-                        }
 #if !APKD_STACKTRACE_NOFORMAT
                         sb.Append(" →(at ");
 #else
                         sb.Append(" (at ");
 #endif
-                        sb.Append(filePath);
+                        if (!loggedFullFilepath)
+                        {
+                            frame.AppendFullFilename(sb);
+                            loggedFullFilepath = true;
+                        }
+                        else
+                        {
+                            sb.Append(filePath);
+                        }
 
                         var lineNo = frame.GetFileLineNumber();
                         if (lineNo != 0)

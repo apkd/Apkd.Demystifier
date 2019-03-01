@@ -51,7 +51,7 @@ namespace Apkd.Internal
             if (string.IsNullOrWhiteSpace(_fileName))
                 return null;
 
-            if (_fileName.StartsWith(@"C:\buildslave\unity", System.StringComparison.InvariantCultureIgnoreCase))
+            if (_fileName.StartsWith(@"C:\buildslave\unity", System.StringComparison.Ordinal))
                 return null;
 
             return System.IO.Path.GetFileName(_fileName);
@@ -66,6 +66,16 @@ namespace Apkd.Internal
             if (index >= 0)
                 return _fileName.Substring(index + 1);
             return _fileName;
+        }
+
+        internal StringBuilder AppendFullFilename(StringBuilder sb)
+        {
+            if (string.IsNullOrWhiteSpace(_fileName))
+                return sb;
+            int index = _fileName.IndexOf("\\Assets\\");
+            if (index >= 0)
+                return sb.Append(_fileName, index + 1);
+            return sb.Append(_fileName);
         }
 
         internal bool IsEmpty => MethodInfo == null;
