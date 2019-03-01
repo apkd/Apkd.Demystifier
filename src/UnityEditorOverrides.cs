@@ -107,7 +107,18 @@ namespace Apkd.Internal
                     // smaller filename and line number
                     if (line.IndexOf('→') >= 0)
                     {
-                        line.Replace("→", "<size=8>");
+#if APKD_STACKTRACE_FILEPATH_FONTSIZE_7
+                        const string fontsize = "7";
+#elif APKD_STACKTRACE_FILEPATH_FONTSIZE_9
+                        const string fontsize = "9";
+#elif APKD_STACKTRACE_FILEPATH_FONTSIZE_10
+                        const string fontsize = "10";
+#elif APKD_STACKTRACE_FILEPATH_FONTSIZE_11
+                        const string fontsize = "11";
+#else
+                        const string fontsize = "8";
+#endif
+                        line.Replace("→", "<size=" + fontsize + ">");
                         bool isLastLine = line[line.Length - 1] != '\n';
                         int endIndex = isLastLine ? line.Length : line.Length - 1;
                         line.Insert(endIndex, "</size>");
