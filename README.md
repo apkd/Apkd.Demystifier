@@ -11,7 +11,7 @@ Improved stack trace display for Unity, based on [Ben.Demystifier](https://githu
 ## Requirements
 
 - The [.NET 4.X Scripting Runtime](https://docs.unity3d.com/Manual/ScriptingRuntimeUpgrade.html) needs to be enabled in the project.
-- Only tested on the 2018.3 (Windows/x86_64) version of the editor.
+- Only tested on the 2018.3 (Windows/x86_64) version of the editor (please [let me know](https://github.com/apkd/Apkd.UnityDemystifier/issues/1) how this performs on your platform).
 
 ## Installation
 
