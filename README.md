@@ -41,6 +41,8 @@ You can customize the stack trace by defining the following compilation symbols 
 - `APKD_STACKTRACE_FULLPARAMS` - Shows an expanded parameter list in the method signature. You can enable this if you have an unnaturally wide monitor.
 - `APKD_STACKTRACE_NOFORMAT` - Disables stack trace font formatting. Useful if you prefer your copy-pasted stack traces and log files to be clean.
 - `APKD_STACKTRACE_DISABLE` - Restores default Unity stack traces.
+- `APKD_STACKTRACE_FILEPATH_FONTSIZE_XX` - Change the font size of the source filename/line number string to `XX` (available values: 7-11, default: 8).
+- `APKD_STACKTRACE_NOCACHE` - Disable caching. Less memory usage, higher performance impact.
 - `APKD_STACKTRACE_LAMBDAORDINALS` - Shows lambda expression ordinals.
 
 ## Notes
