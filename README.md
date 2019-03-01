@@ -10,24 +10,26 @@ Improved stack trace display for Unity, based on [Ben.Demystifier](https://githu
 
 ## Requirements
 
-- .NET 4.X Scripting Runtime enabled in the project
-- Only tested on the 2018.3 (Windows/x86-64) version of the editor.
+- The [.NET 4.X Scripting Runtime](https://docs.unity3d.com/Manual/ScriptingRuntimeUpgrade.html) needs to be enabled in the project.
+- Only tested on the 2018.3 (Windows/x86_64) version of the editor.
 
-## Installation (automatic)
+## Installation
 
-Add a reference to the repository inside the `Packages\manifest.json` file in your project directory:
+### Unity Package Manager
+
+Add a reference to the repository in the [`Packages\manifest.json`](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html#project-manifests) file in your project directory:
 
 ```json
 {
   "dependencies": {
     "com.unity.postprocessing": "2.1.3",
-    ...
     "pl.apkd.demystifier": "https://github.com/apkd/Apkd.UnityDemystifier.git"
   }
 }
 ```
 
-## Installation (manual)
+
+### Manual
 
 Clone/download this repository into the `Assets` directory of your project.
 
@@ -39,7 +41,7 @@ You can customize the stack trace by defining the following compilation symbols 
 - `APKD_STACKTRACE_FULLPARAMS` - Shows an expanded parameter list in the method signature. You can enable this if you have an unnaturally wide monitor.
 - `APKD_STACKTRACE_NOFORMAT` - Disables stack trace font formatting. Useful if you prefer your copy-pasted stack traces and log files to be clean.
 - `APKD_STACKTRACE_DISABLE` - Restores default Unity stack traces.
-- `APKD_STACKTRACE_LAMBDAORDINALS` - Shows lambda ordinals.
+- `APKD_STACKTRACE_LAMBDAORDINALS` - Shows lambda expression ordinals.
 
 ## Notes
 
