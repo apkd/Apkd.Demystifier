@@ -28,12 +28,17 @@ Add a reference to the repository in the [`Packages\manifest.json`](https://docs
 }
 ```
 
+### Unity Asset Store
+
+Install the package to your project using the [Asset Store page](http://u3d.as/1te5).
 
 ### Manual
 
 Clone/download this repository into the `Assets` directory of your project.
 
 ## Configuration
+
+The package will work immediately after installation without any additional steps.
 
 You can customize the stack trace by defining the following compilation symbols in the project settings:
 - `APKD_STACKTRACE_HIDEPARAMS` - Hide the method parameter list completely. The most compact option. 
