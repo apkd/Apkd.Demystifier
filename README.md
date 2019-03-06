@@ -15,7 +15,11 @@ Improved stack trace display for Unity, based on [Ben.Demystifier](https://githu
 
 ## Installation
 
-### Unity Package Manager
+### Unity Asset Store
+
+Install the package in your project using the [Asset Store page](http://u3d.as/1te5).
+
+### Unity Package Manager (Unity 2018.3+)
 
 Add a reference to the repository in the [`Packages\manifest.json`](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html#project-manifests) file in your project directory:
 
@@ -28,13 +32,10 @@ Add a reference to the repository in the [`Packages\manifest.json`](https://docs
 }
 ```
 
-### Unity Asset Store
-
-Install the package to your project using the [Asset Store page](http://u3d.as/1te5).
-
-### Manual
+### Manual (Unity 2018.3+)
 
 Clone/download this repository into the `Assets` directory of your project.
+
 
 ## Configuration
 
