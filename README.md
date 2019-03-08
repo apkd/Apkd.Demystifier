@@ -32,9 +32,15 @@ Add a reference to the repository in the [`Packages\manifest.json`](https://docs
 }
 ```
 
-### Manual *(Unity 2018.3+)*
+### Manual
+
+#### From source *(Unity 2018.3+)*
 
 Clone/download this repository into the `Assets` directory of your project.
+
+#### Using compiled DLL *(Unity 2017.1+)*
+
+Download and extract the latest [release zip](https://github.com/apkd/Apkd.UnityDemystifier/releases) into the `Assets` directory of your project.
 
 
 ## Configuration
