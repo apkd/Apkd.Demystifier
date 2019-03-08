@@ -2,7 +2,7 @@
     "name": "pl.apkd.demystifier",
     "displayName": "Apkd.UnityDemystifier",
     "version": "0.0.1",
-    "unity": "2018.1",
+    "unity": "2018.3",
     "description": "Improved stack trace display for Unity, based on Ben.Demystifier.",
     "dependencies": {},
     "keywords": [],
