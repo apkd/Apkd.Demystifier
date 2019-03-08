@@ -762,7 +762,7 @@ namespace Apkd.Internal
 #endif
 
             // support for the Apkd.AsyncManager package
-            if (typeFullName.StartsWith("Apkd.AsyncManager", StringComparison.Ordinal))
+            if (typeFullName.StartsWith("Apkd.Internal.AsyncManager", StringComparison.Ordinal))
                 return false;
 
             // collapse internal unity logging methods
