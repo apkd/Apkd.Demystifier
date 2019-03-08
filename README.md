@@ -11,7 +11,7 @@ Improved stack trace display for Unity, based on [Ben.Demystifier](https://githu
 ## Requirements
 
 - The [.NET 4.X Scripting Runtime](https://docs.unity3d.com/Manual/ScriptingRuntimeUpgrade.html) needs to be enabled in the project.
-- Only tested on the 2018.3 (Windows/x86_64) version of the editor (please [let me know](https://github.com/apkd/Apkd.UnityDemystifier/issues/1) how this performs on your platform).
+- Only tested on the Windows/x86_64 version of the editor (please [let me know](https://github.com/apkd/Apkd.UnityDemystifier/issues/1) how this performs on your platform).
 
 ## Installation
 
@@ -19,7 +19,7 @@ Improved stack trace display for Unity, based on [Ben.Demystifier](https://githu
 
 Install the package in your project using the [Asset Store page](http://u3d.as/1te5).
 
-### Unity Package Manager (Unity 2018.3+)
+### Unity Package Manager *(Unity 2018.3+)*
 
 Add a reference to the repository in the [`Packages\manifest.json`](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html#project-manifests) file in your project directory:
 
@@ -32,7 +32,7 @@ Add a reference to the repository in the [`Packages\manifest.json`](https://docs
 }
 ```
 
-### Manual (Unity 2018.3+)
+### Manual *(Unity 2018.3+)*
 
 Clone/download this repository into the `Assets` directory of your project.
 
@@ -41,7 +41,7 @@ Clone/download this repository into the `Assets` directory of your project.
 
 The package will work immediately after installation without any additional steps.
 
-You can customize the stack trace by defining the following compilation symbols in the project settings:
+*(Unity 2018.3+)* You can customize the stack trace by defining the following compilation symbols in the project settings:
 - `APKD_STACKTRACE_HIDEPARAMS` - Hide the method parameter list completely. The most compact option. 
 - `APKD_STACKTRACE_SHORTPARAMS` - Display the parameter list compactly (first letter of each parameter name only).
 - `APKD_STACKTRACE_FULLPARAMS` - Shows an expanded parameter list in the method signature. You can enable this if you have an unnaturally wide monitor.
