@@ -765,6 +765,9 @@ namespace Apkd.Internal
             if (typeFullName.StartsWith("Apkd.Internal.AsyncManager", StringComparison.Ordinal))
                 return false;
 
+            if (typeFullName.StartsWith("Apkd.Internal.Continuation`1", StringComparison.Ordinal))
+                return false;
+
             // collapse internal unity logging methods
             if (typeFullName == "UnityEngine.DebugLogHandler")
                 return false;
