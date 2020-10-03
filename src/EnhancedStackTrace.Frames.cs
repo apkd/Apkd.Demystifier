@@ -656,7 +656,9 @@ namespace Apkd.Internal
         static bool ShouldCollapseStackFrames(MethodBase method)
         {
             var comparison = StringComparison.Ordinal;
-            var typeName = method.DeclaringType.FullName;
+            string typeName = method?.DeclaringType?.FullName;
+            if (string.IsNullOrWhiteSpace(typeName))
+                return false;
             return typeName.StartsWith("UnityEditor.", comparison) ||
                 typeName.StartsWith("UnityEngine.", comparison) ||
                 typeName.StartsWith("System.", comparison) ||

@@ -65,18 +65,14 @@ namespace Apkd.Internal
             }
             catch (Exception exception)
             {
-                UnityEngine.Debug.LogError($"Unable to detour: {src.Name}: {exception.Message}");
+                UnityEngine.Debug.LogError($"Unable to detour: {src.Name}");
+                throw;
             }
         }
 
         static Detour()
         {
 #if !APKD_STACKTRACE_DISABLE
-            TryDetourFromTo(
-                src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static),
-                dst: typeof(UnityEditorOverrides).GetMethod(nameof(PostprocessStacktrace), NonPublic | Static)
-            );
-
             TryDetourFromTo(
                 src: typeof(UnityEngine.StackTraceUtility).GetMethod(nameof(ExtractStringFromExceptionInternal), NonPublic | Static),
                 dst: typeof(UnityEditorOverrides).GetMethod(nameof(ExtractStringFromExceptionInternal), NonPublic | Static)

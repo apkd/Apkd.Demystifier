@@ -20,7 +20,7 @@ namespace Apkd.Internal
             try
             {
                 var temp = CachedBuilderLarge.Clear();
-                return new EnhancedStackTrace(stackTrace).ToString(temp);
+                return PostprocessStacktrace(new EnhancedStackTrace(stackTrace).ToString(temp), true);
             }
             catch (Exception e)
             {
@@ -135,12 +135,12 @@ namespace Apkd.Internal
         }
 
         // Method used to extract the stack trace from an exception.
-        internal static void ExtractStringFromExceptionInternal(System.Object topLevel, out string message, out string stackTrace)
+        internal static void ExtractStringFromExceptionInternal(object topLevel, out string message, out string stackTrace)
         {
             try
             {
                 StringBuilder temp = CachedBuilderLarge;
-                Exception current = topLevel as System.Exception;
+                Exception current = topLevel as Exception;
 
                 temp.Clear();
                 if (current.Message != null)
@@ -175,11 +175,11 @@ namespace Apkd.Internal
                 }
                 new EnhancedStackTrace(new StackTrace(skipFrames: 1, fNeedFileInfo: true)).Append(temp);
 
-                stackTrace = temp.ToString();
+                stackTrace = PostprocessStacktrace(temp.ToString(), true);
             }
             catch (Exception ex)
             {
-                message = $"Unable to extract stack trace from exception: {(topLevel as System.Exception).GetType().Name}.";
+                message = $"{topLevel}\n\nDemistifier: Unable to extract stack trace from exception: {(topLevel as Exception).GetType().Name}.";
                 stackTrace = ex.ToString();
             }
         }

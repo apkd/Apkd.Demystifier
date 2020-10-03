@@ -101,18 +101,19 @@ namespace Apkd.Internal
                     var filePath = frame.GetFileName();
                     if (!string.IsNullOrEmpty(filePath) && !frame.MethodInfo.Name.StartsWith("Log"))
                     {
-#if !APKD_STACKTRACE_NOFORMAT
-                        sb.Append(" →(at ");
-#else
-                        sb.Append(" (at ");
-#endif
                         if (!loggedFullFilepath)
                         {
+                            sb.Append(" (at ");
                             frame.AppendFullFilename(sb);
                             loggedFullFilepath = true;
                         }
                         else
                         {
+#if !APKD_STACKTRACE_NOFORMAT
+                            sb.Append(" →(at ");
+#else
+                            sb.Append(" (at ");
+#endif
                             sb.Append(filePath);
                         }
 
