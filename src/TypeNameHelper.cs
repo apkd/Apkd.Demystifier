@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Apkd.Internal
 {
     // Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
-    internal static class TypeNameHelper
+    static class TypeNameHelper
     {
         internal static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
         {

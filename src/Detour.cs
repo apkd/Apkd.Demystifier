@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
-using System.Diagnostics;
 using static System.Reflection.BindingFlags;
+// ReSharper disable once RedundantUsingDirective
 using static Apkd.Internal.UnityEditorOverrides;
 
 namespace Apkd.Internal
@@ -11,7 +11,7 @@ namespace Apkd.Internal
     {
         // This is based on an interesting technique from the RimWorld ComunityCoreLibrary project, originally credited to RawCode:
         // https://github.com/RimWorldCCLTeam/CommunityCoreLibrary/blob/master/DLL_Project/Classes/Static/Detours.cs
-        internal static unsafe void TryDetourFromTo(MethodInfo src, MethodInfo dst)
+        static unsafe void TryDetourFromTo(MethodInfo src, MethodInfo dst)
         {
             try
             {

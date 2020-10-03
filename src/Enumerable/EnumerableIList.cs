@@ -6,14 +6,14 @@ using System.Collections.Generic;
 
 namespace Apkd.Internal
 {
-    internal static class EnumerableIList
+    static class EnumerableIList
     {
         internal static EnumerableIList<T> Create<T>(IList<T> list) => new EnumerableIList<T>(list);
     }
 
-    internal struct EnumerableIList<T> : IEnumerableIList<T>, IList<T>
+    struct EnumerableIList<T> : IEnumerableIList<T>, IList<T>
     {
-        private readonly IList<T> _list;
+        readonly IList<T> _list;
 
         public EnumerableIList(IList<T> list) => _list = list;
 

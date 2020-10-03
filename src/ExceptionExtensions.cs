@@ -2,18 +2,16 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace Apkd.Internal
 {
     /// <nodoc />
-    internal static class ExceptionExtensions
+    static class ExceptionExtensions
     {
-        private static readonly FieldInfo stackTraceString = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo stackTraceString = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static void SetStackTracesString(this Exception exception, string value)
+        static void SetStackTracesString(this Exception exception, string value)
             => stackTraceString.SetValue(exception, value);
 
         /// <summary>
@@ -26,17 +24,11 @@ namespace Apkd.Internal
                 var stackTrace = new EnhancedStackTrace(exception);
 
                 if (stackTrace.FrameCount > 0)
-                {
                     exception.SetStackTracesString(stackTrace.ToString());
-                }
 
                 if (exception is AggregateException aggEx)
-                {
                     foreach (var ex in EnumerableIList.Create(aggEx.InnerExceptions))
-                    {
                         ex.Demystify();
-                    }
-                }
 
                 exception.InnerException?.Demystify();
             }

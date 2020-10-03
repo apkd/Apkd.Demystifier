@@ -56,12 +56,7 @@ namespace Apkd
 
         /// <summary> Return the string result </summary>
         public override string ToString()
-        {
-            if (_cachedString == null)
-                _cachedString = new string(_buffer, 0, _bufferPos);
-
-            return _cachedString;
-        }
+            => _cachedString ?? (_cachedString = new string(_buffer, 0, _bufferPos));
 
         /// <summary> Clears the StringBuilder instance (preserving allocated capacity) </summary>
         public StringBuilder Clear()

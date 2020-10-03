@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Diagnostics;
 using System.Reflection;
 
 namespace Apkd.Internal
 {
-    internal sealed class EnhancedStackFrame : StackFrame
+    sealed class EnhancedStackFrame : StackFrame
     {
         string _fileName;
         int _lineNumber;
@@ -51,31 +52,33 @@ namespace Apkd.Internal
             if (string.IsNullOrWhiteSpace(_fileName))
                 return null;
 
-            if (_fileName.StartsWith(@"C:\buildslave\unity", System.StringComparison.Ordinal))
-                return null;
-
-            return System.IO.Path.GetFileName(_fileName);
-            // return _fileName;
+            return !_fileName.StartsWith(@"C:\buildslave\unity", StringComparison.Ordinal)
+                ? System.IO.Path.GetFileName(_fileName)
+                : null;
         }
 
         internal string GetFullFilename()
         {
             if (string.IsNullOrWhiteSpace(_fileName))
                 return null;
-            int index = _fileName.IndexOf("\\Assets\\");
-            if (index >= 0)
-                return _fileName.Substring(index + 1);
-            return _fileName;
+
+            int index = _fileName.IndexOf("\\Assets\\", StringComparison.Ordinal);
+
+            return index >= 0
+                ? _fileName.Substring(index + 1)
+                : _fileName;
         }
 
         internal StringBuilder AppendFullFilename(StringBuilder sb)
         {
             if (string.IsNullOrWhiteSpace(_fileName))
                 return sb;
-            int index = _fileName.IndexOf("\\Assets\\");
-            if (index >= 0)
-                return sb.Append(_fileName, index + 1);
-            return sb.Append(_fileName);
+
+            int index = _fileName.IndexOf("\\Assets\\", StringComparison.Ordinal);
+
+            return index >= 0
+                ? sb.Append(_fileName, index + 1)
+                : sb.Append(_fileName);
         }
 
         internal bool IsEmpty => MethodInfo == null;
