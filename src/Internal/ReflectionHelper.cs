@@ -11,7 +11,7 @@ namespace Apkd.Internal
     /// <summary>
     /// A helper class that contains utilities methods for dealing with reflection.
     /// </summary>
-    internal static class ReflectionHelper
+    static class ReflectionHelper
     {
         static PropertyInfo tranformerNamesLazyPropertyInfo;
         static readonly Type isReadOnlyAttribute = Type.GetType("System.Runtime.CompilerServices.IsReadOnlyAttribute", false);

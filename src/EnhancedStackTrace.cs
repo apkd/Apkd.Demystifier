@@ -5,11 +5,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace Apkd.Internal
 {
-    internal sealed partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
+    sealed partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
     {
         internal static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
 
@@ -62,6 +61,7 @@ namespace Apkd.Internal
         ///     An array of type System.Diagnostics.StackFrame representing the function calls
         ///     in the stack trace.
         /// </returns>
+        // ReSharper disable once CoVariantArrayConversion
         public override StackFrame[] GetFrames() => _frames.ToArray();
 
         /// <summary>
@@ -97,33 +97,33 @@ namespace Apkd.Internal
                 else
                 {
                     frame.MethodInfo.Append(sb);
+                    string filePath = frame.GetFileName();
 
-                    var filePath = frame.GetFileName();
-                    if (!string.IsNullOrEmpty(filePath) && !frame.MethodInfo.Name.StartsWith("Log"))
+                    if (string.IsNullOrEmpty(filePath) || frame.MethodInfo.Name.StartsWith("Log"))
+                        continue;
+
+                    if (!loggedFullFilepath)
                     {
-                        if (!loggedFullFilepath)
-                        {
-                            sb.Append(" (at ");
-                            frame.AppendFullFilename(sb);
-                            loggedFullFilepath = true;
-                        }
-                        else
-                        {
+                        sb.Append(" (at ");
+                        frame.AppendFullFilename(sb);
+                        loggedFullFilepath = true;
+                    }
+                    else
+                    {
 #if !APKD_STACKTRACE_NOFORMAT
-                            sb.Append(" →(at ");
+                        sb.Append(" →(at ");
 #else
                             sb.Append(" (at ");
 #endif
-                            sb.Append(filePath);
-                        }
+                        sb.Append(filePath);
+                    }
 
-                        var lineNo = frame.GetFileLineNumber();
-                        if (lineNo != 0)
-                        {
-                            sb.Append(':');
-                            sb.Append(lineNo);
-                            sb.Append(')');
-                        }
+                    var lineNo = frame.GetFileLineNumber();
+                    if (lineNo != 0)
+                    {
+                        sb.Append(':');
+                        sb.Append(lineNo);
+                        sb.Append(')');
                     }
                 }
             }

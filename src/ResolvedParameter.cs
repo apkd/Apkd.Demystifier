@@ -3,7 +3,7 @@
 
 namespace Apkd.Internal
 {
-    internal class ResolvedParameter
+    class ResolvedParameter
     {
         internal string Name { get; set; }
 

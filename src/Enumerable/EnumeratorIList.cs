@@ -6,10 +6,10 @@ using System.Collections.Generic;
 
 namespace Apkd.Internal
 {
-    internal struct EnumeratorIList<T> : IEnumerator<T>
+    struct EnumeratorIList<T> : IEnumerator<T>
     {
-        private readonly IList<T> _list;
-        private int _index;
+        readonly IList<T> _list;
+        int _index;
 
         internal EnumeratorIList(IList<T> list)
         {

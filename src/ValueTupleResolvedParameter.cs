@@ -2,11 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Apkd.Internal 
 {
-    internal sealed class ValueTupleResolvedParameter : ResolvedParameter
+    sealed class ValueTupleResolvedParameter : ResolvedParameter
     {
         internal IList<string> TupleNames { get; set; }
 
@@ -27,7 +26,7 @@ namespace Apkd.Internal
         }
 
 
-        void AppendValueTupleParameterName(StringBuilder sb, System.Type parameterType)
+        static void AppendValueTupleParameterName(StringBuilder sb, System.Type parameterType)
         {
             sb.Append('(');
             var args = parameterType.GetGenericArguments();

@@ -2,13 +2,11 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Diagnostics;
 using System.Reflection;
-using System.Linq;
 
 namespace Apkd.Internal
 {
-    internal sealed class ResolvedMethod
+    sealed class ResolvedMethod
     {
         internal MethodBase MethodBase { get; set; }
 
@@ -53,7 +51,6 @@ namespace Apkd.Internal
 
             if (DeclaringType != null)
             {
-
                 if (Name == ".ctor")
                 {
                     if (!hasSubMethodOrLambda)
@@ -161,53 +158,16 @@ namespace Apkd.Internal
 #endif
 #endif
 
-            if (hasSubMethodOrLambda)
+            if (!hasSubMethodOrLambda)
+                return builder;
+
+            builder.Append('+');
+            builder.Append(SubMethod);
+            if (IsLambda)
             {
-                builder.Append('+');
-                builder.Append(SubMethod);
-                if (IsLambda)
+                builder.Append('(');
+                if (SubMethodBase != null)
                 {
-                    builder.Append('(');
-                    if (SubMethodBase != null)
-                    {
-                        var isFirst = true;
-                        builder.AppendFormattingChar('‹');
-                        foreach (var param in SubMethodParameters)
-                        {
-                            if (isFirst)
-                                isFirst = false;
-                            else
-                                builder.Append(',').Append(' ');
-
-                            param.AppendTypeName(builder);
-                        }
-                        builder.AppendFormattingChar('›');
-                    }
-                    else
-                    {
-                        builder.Append('?');
-                    }
-                    builder.Append(")➞ ");
-
-                    var returnType = (SubMethodBase as MethodInfo)?.ReturnType;
-                    if (returnType != null)
-                        TypeNameHelper.AppendTypeDisplayName(builder, returnType, fullName: false, includeGenericParameterNames: false);
-                    else
-                        builder.Append("{…}");
-
-                    if (Ordinal.HasValue)
-                    {
-                        builder.Append(' ');
-                        builder.Append('[');
-                        builder.Append(Ordinal.Value);
-                        builder.Append(']');
-                    }
-                    builder.AppendFormattingChar('‼');
-                }
-                else
-                {
-                    builder.AppendFormattingChar('‼');
-                    builder.Append('(');
                     var isFirst = true;
                     builder.AppendFormattingChar('‹');
                     foreach (var param in SubMethodParameters)
@@ -219,9 +179,50 @@ namespace Apkd.Internal
 
                         param.AppendTypeName(builder);
                     }
+
                     builder.AppendFormattingChar('›');
-                    builder.Append(')');
                 }
+                else
+                {
+                    builder.Append('?');
+                }
+
+                builder.Append(")➞ ");
+
+                var returnType = (SubMethodBase as MethodInfo)?.ReturnType;
+                if (returnType != null)
+                    builder.AppendTypeDisplayName(returnType, fullName: false, includeGenericParameterNames: false);
+                else
+                    builder.Append("{…}");
+
+                if (Ordinal.HasValue)
+                {
+                    builder.Append(' ');
+                    builder.Append('[');
+                    builder.Append(Ordinal.Value);
+                    builder.Append(']');
+                }
+
+                builder.AppendFormattingChar('‼');
+            }
+            else
+            {
+                builder.AppendFormattingChar('‼');
+                builder.Append('(');
+                var isFirst = true;
+                builder.AppendFormattingChar('‹');
+                foreach (var param in SubMethodParameters)
+                {
+                    if (isFirst)
+                        isFirst = false;
+                    else
+                        builder.Append(',').Append(' ');
+
+                    param.AppendTypeName(builder);
+                }
+
+                builder.AppendFormattingChar('›');
+                builder.Append(')');
             }
 
             return builder;

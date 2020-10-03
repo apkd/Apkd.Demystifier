@@ -2,16 +2,16 @@ using System.Collections.Generic;
 
 namespace Apkd.Internal
 {
-    internal sealed class CacheDictionary<TKey, TValue> where TKey : class where TValue : class
+    sealed class CacheDictionary<TKey, TValue> where TKey : class where TValue : class
     {
         readonly int cacheSize;
         readonly Queue<object> objectReferenceQueue;
         readonly System.Runtime.CompilerServices.ConditionalWeakTable<TKey, TValue> weakTable
             = new System.Runtime.CompilerServices.ConditionalWeakTable<TKey, TValue>();
 
-        const int defaultCacheSize = 256;
+        const int DefaultCacheSize = 256;
 
-        public CacheDictionary(int cacheSize = 256)
+        public CacheDictionary(int cacheSize = DefaultCacheSize)
 #if APKD_STACKTRACE_NOCACHE
             { }
 #else

@@ -140,13 +140,17 @@ namespace Apkd.Internal
             try
             {
                 StringBuilder temp = CachedBuilderLarge;
-                Exception current = topLevel as Exception;
+                Exception current = (Exception)topLevel;
 
                 temp.Clear();
-                if (current.Message != null)
-                    message = temp.Append(current.GetType().ToString()).Append(": ").Append(current.Message).ToString();
-                else
-                    message = current.GetType().ToString();
+
+                message = current.Message != null
+                    ? temp
+                        .Append(current.GetType().ToString())
+                        .Append(": ")
+                        .Append(current.Message)
+                        .ToString()
+                    : current.GetType().ToString();
 
                 temp.Clear();
                 while (current != null)
@@ -157,7 +161,7 @@ namespace Apkd.Internal
                     }
                     else
                     {
-                        temp.Append($" ---> ");
+                        temp.Append(" ---> ");
                         temp.Append('\n');
 
                         if (!string.IsNullOrEmpty(current.Message))
@@ -179,7 +183,7 @@ namespace Apkd.Internal
             }
             catch (Exception ex)
             {
-                message = $"{topLevel}\n\nDemistifier: Unable to extract stack trace from exception: {(topLevel as Exception).GetType().Name}.";
+                message = $"{topLevel}\n\nDemystifier: Unable to extract stack trace from exception: {(topLevel as Exception).GetType().Name}.";
                 stackTrace = ex.ToString();
             }
         }
